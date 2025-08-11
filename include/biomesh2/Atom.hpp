@@ -9,6 +9,7 @@ namespace biomesh2 {
  * @brief Enhanced Atom structure with physical properties
  * 
  * Represents an atom with chemical element, coordinates, and physical properties.
+ * Uses atomic radii (not van der Waals radii) for accurate atomic representation.
  */
 class Atom {
 public:

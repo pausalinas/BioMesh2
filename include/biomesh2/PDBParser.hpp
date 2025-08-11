@@ -40,11 +40,27 @@ private:
     static std::unique_ptr<Atom> parseAtomLine(const std::string& line, size_t atomId);
 
     /**
-     * @brief Extract element symbol from atom name
-     * @param atomName Atom name from PDB file
+     * @brief Extract element symbol from atom name with residue context
+     * @param atomName Atom name from PDB file (columns 13-16)
+     * @param residueName Residue name from PDB file (columns 18-20), optional
      * @return Chemical element symbol
      */
-    static std::string extractElement(const std::string& atomName);
+    static std::string extractElement(const std::string& atomName, const std::string& residueName = "");
+
+    /**
+     * @brief Validate element symbol against atomic database
+     * @param element Element symbol to validate
+     * @return true if element exists in atomic database
+     */
+    static bool isValidElement(const std::string& element);
+
+    /**
+     * @brief Resolve ambiguous atom names using residue context
+     * @param atomName Atom name from PDB file
+     * @param residueName Residue name from PDB file
+     * @return Resolved chemical element symbol
+     */
+    static std::string resolveAmbiguousElement(const std::string& atomName, const std::string& residueName);
 
     /**
      * @brief Parse coordinate value from PDB line

@@ -12,6 +12,7 @@ namespace biomesh2 {
  * 
  * Takes atoms with basic information and enriches them with atomic
  * radius and mass from the atomic specification database.
+ * Uses atomic radii (not van der Waals radii) for accurate atomic properties.
  */
 class AtomBuilder {
 public:
