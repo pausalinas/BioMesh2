@@ -98,15 +98,15 @@ TEST_F(AtomicSpecTest, DefaultSpecsExist) {
     EXPECT_TRUE(db.hasElement("P"));
     EXPECT_TRUE(db.hasElement("S"));
     
-    // Test some specific values
+    // Test some specific values - using atomic radii (not van der Waals)
     const auto& carbon = db.getSpec("C");
     EXPECT_EQ("C", carbon.elementSymbol);
-    EXPECT_EQ(1.70, carbon.radius);
+    EXPECT_EQ(0.67, carbon.radius);  // Atomic radius
     EXPECT_EQ(12.011, carbon.mass);
     
     const auto& hydrogen = db.getSpec("H");
     EXPECT_EQ("H", hydrogen.elementSymbol);
-    EXPECT_EQ(1.20, hydrogen.radius);
+    EXPECT_EQ(0.31, hydrogen.radius);  // Atomic radius
     EXPECT_EQ(1.008, hydrogen.mass);
 }
 
@@ -149,23 +149,23 @@ TEST_F(AtomBuilderTest, CorrectPropertyAssignment) {
     
     ASSERT_EQ(2, enrichedAtoms.size());
     
-    // Check carbon properties
+    // Check carbon properties - using atomic radii
     const auto& enrichedCarbon = enrichedAtoms[0];
     EXPECT_EQ("C", enrichedCarbon->getChemicalElement());
     EXPECT_EQ(1.0, enrichedCarbon->getX());
     EXPECT_EQ(2.0, enrichedCarbon->getY());
     EXPECT_EQ(3.0, enrichedCarbon->getZ());
-    EXPECT_EQ(1.70, enrichedCarbon->getAtomicRadius());
+    EXPECT_EQ(0.67, enrichedCarbon->getAtomicRadius());  // Atomic radius
     EXPECT_EQ(12.011, enrichedCarbon->getAtomicMass());
     EXPECT_EQ(1, enrichedCarbon->getId());
     
-    // Check nitrogen properties
+    // Check nitrogen properties - using atomic radii
     const auto& enrichedNitrogen = enrichedAtoms[1];
     EXPECT_EQ("N", enrichedNitrogen->getChemicalElement());
     EXPECT_EQ(4.0, enrichedNitrogen->getX());
     EXPECT_EQ(5.0, enrichedNitrogen->getY());
     EXPECT_EQ(6.0, enrichedNitrogen->getZ());
-    EXPECT_EQ(1.55, enrichedNitrogen->getAtomicRadius());
+    EXPECT_EQ(0.56, enrichedNitrogen->getAtomicRadius());  // Atomic radius
     EXPECT_EQ(14.007, enrichedNitrogen->getAtomicMass());
     EXPECT_EQ(2, enrichedNitrogen->getId());
 }
@@ -313,4 +313,103 @@ TEST_F(PDBParserTest, EmptyContentThrows) {
 
 TEST_F(PDBParserTest, NonexistentFileThrows) {
     EXPECT_THROW(PDBParser::parsePDBFile("nonexistent_file.pdb"), std::runtime_error);
+}
+
+// Enhanced PDB Parser tests for improved element extraction
+TEST_F(PDBParserTest, ElementExtractionFromColumns77_78) {
+    // Test element extraction when columns 77-78 are present and valid
+    std::string pdbContent = 
+        "ATOM      1  N   ALA A   1      20.154  16.967  10.000  1.00 20.00           N  \n"
+        "ATOM      2  CA  ALA A   1      19.030  16.200   9.500  1.00 20.00           C  \n"
+        "ATOM      3  FE  HEM A   2      18.000  15.000   8.000  1.00 30.00          Fe  \n";
+    
+    auto atoms = PDBParser::parsePDBContent(pdbContent);
+    
+    ASSERT_EQ(3, atoms.size());
+    EXPECT_EQ("N", atoms[0]->getChemicalElement());
+    EXPECT_EQ("C", atoms[1]->getChemicalElement());
+    EXPECT_EQ("Fe", atoms[2]->getChemicalElement());
+}
+
+TEST_F(PDBParserTest, ElementExtractionMissingColumns77_78) {
+    // Test element extraction when columns 77-78 are missing (shorter lines)
+    std::string pdbContent = 
+        "ATOM      1  N   ALA A   1      20.154  16.967  10.000  1.00 20.00\n"
+        "ATOM      2  CA  ALA A   1      19.030  16.200   9.500  1.00 20.00\n"
+        "ATOM      3  O   ALA A   1      17.500  14.500   7.000  1.00 20.00\n";
+    
+    auto atoms = PDBParser::parsePDBContent(pdbContent);
+    
+    ASSERT_EQ(3, atoms.size());
+    EXPECT_EQ("N", atoms[0]->getChemicalElement());
+    EXPECT_EQ("C", atoms[1]->getChemicalElement());  // CA -> C (alpha carbon in amino acid)
+    EXPECT_EQ("O", atoms[2]->getChemicalElement());
+}
+
+TEST_F(PDBParserTest, AmbiguousCAResolution) {
+    // Test CA disambiguation: CA in amino acid vs Ca (calcium)
+    std::string pdbContentAminoAcid = 
+        "ATOM      1  CA  ALA A   1      19.030  16.200   9.500  1.00 20.00\n";
+    
+    std::string pdbContentCalcium = 
+        "ATOM      1  CA  CAL A   1      19.030  16.200   9.500  1.00 20.00\n";
+    
+    auto atomsAA = PDBParser::parsePDBContent(pdbContentAminoAcid);
+    auto atomsCa = PDBParser::parsePDBContent(pdbContentCalcium);
+    
+    ASSERT_EQ(1, atomsAA.size());
+    ASSERT_EQ(1, atomsCa.size());
+    EXPECT_EQ("C", atomsAA[0]->getChemicalElement());   // Alpha carbon in alanine
+    EXPECT_EQ("Ca", atomsCa[0]->getChemicalElement());  // Calcium in non-amino acid
+}
+
+TEST_F(PDBParserTest, TwoLetterElementExtraction) {
+    // Test extraction of two-letter elements
+    std::string pdbContent = 
+        "ATOM      1  MG  HEM A   1      20.000  16.000  10.000  1.00 20.00\n"
+        "ATOM      2  ZN  ZNC A   2      19.000  15.000   9.000  1.00 20.00\n"
+        "ATOM      3  CL  CLA A   3      18.000  14.000   8.000  1.00 20.00\n";
+    
+    auto atoms = PDBParser::parsePDBContent(pdbContent);
+    
+    ASSERT_EQ(3, atoms.size());
+    EXPECT_EQ("Mg", atoms[0]->getChemicalElement());
+    EXPECT_EQ("Zn", atoms[1]->getChemicalElement());
+    EXPECT_EQ("Cl", atoms[2]->getChemicalElement());
+}
+
+TEST_F(PDBParserTest, InvalidElementFallback) {
+    // Test fallback when columns 77-78 contain invalid elements
+    std::string pdbContent = 
+        "ATOM      1  N   ALA A   1      20.154  16.967  10.000  1.00 20.00          XX  \n"
+        "ATOM      2  CA  ALA A   1      19.030  16.200   9.500  1.00 20.00          YY  \n";
+    
+    auto atoms = PDBParser::parsePDBContent(pdbContent);
+    
+    ASSERT_EQ(2, atoms.size());
+    EXPECT_EQ("N", atoms[0]->getChemicalElement());   // Fallback to atom name
+    EXPECT_EQ("C", atoms[1]->getChemicalElement());   // Fallback to atom name (CA -> C in amino acid)
+}
+
+TEST_F(PDBParserTest, ElementValidationAgainstDatabase) {
+    // Test that only elements in the atomic database are accepted
+    // Use 'Q' which is not a real element and shouldn't be in the database
+    std::string pdbContent = 
+        "ATOM      1  QQ  UNK A   1      20.000  16.000  10.000  1.00 20.00\n";
+    
+    // This should throw because no valid atoms can be parsed (QQ -> Q, and Q is not in our database)
+    EXPECT_THROW(PDBParser::parsePDBContent(pdbContent), std::runtime_error);
+}
+
+TEST_F(PDBParserTest, MixedValidInvalidElements) {
+    // Test with mixed valid and invalid elements
+    // Use 'Q' which is not a real element and shouldn't be in the database
+    std::string pdbContent = 
+        "ATOM      1  C   ALA A   1      20.000  16.000  10.000  1.00 20.00\n"
+        "ATOM      2  QQ  UNK A   2      21.000  17.000  11.000  1.00 20.00\n";
+    
+    // Should parse only the valid atom (carbon)
+    auto atoms = PDBParser::parsePDBContent(pdbContent);
+    ASSERT_EQ(1, atoms.size());
+    EXPECT_EQ("C", atoms[0]->getChemicalElement());
 }

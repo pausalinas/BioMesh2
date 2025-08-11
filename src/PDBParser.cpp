@@ -1,9 +1,11 @@
 #include "biomesh2/PDBParser.hpp"
+#include "biomesh2/AtomicSpec.hpp"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <algorithm>
 #include <cctype>
+#include <vector>
 
 namespace biomesh2 {
 
@@ -68,19 +70,32 @@ std::unique_ptr<Atom> PDBParser::parseAtomLine(const std::string& line, size_t a
         double y = parseCoordinate(line, 38, 8);  // positions 39-46 (0-indexed: 38-45)
         double z = parseCoordinate(line, 46, 8);  // positions 47-54 (0-indexed: 46-53)
 
-        // Extract element symbol
+        // Extract residue name for context-aware element detection
+        std::string residueName;
+        if (line.length() >= 20) {
+            residueName = line.substr(17, 3);  // positions 18-20 (0-indexed: 17-19)
+            // Remove whitespace
+            residueName.erase(std::remove_if(residueName.begin(), residueName.end(), ::isspace), residueName.end());
+        }
+
+        // Extract element symbol - try columns 77-78 first (PDB standard)
         std::string element;
         if (line.length() >= 78) {
             // Try to get element from columns 77-78
             element = line.substr(76, 2);
             // Remove whitespace
             element.erase(std::remove_if(element.begin(), element.end(), ::isspace), element.end());
+            
+            // Validate the element against atomic database
+            if (!element.empty() && !isValidElement(element)) {
+                element.clear(); // Invalid element, fall back to atom name parsing
+            }
         }
         
+        // Fallback: extract from atom name (columns 13-16) with residue context
         if (element.empty() && line.length() >= 16) {
-            // Fallback: extract from atom name (columns 13-16)
             std::string atomName = line.substr(12, 4);
-            element = extractElement(atomName);
+            element = extractElement(atomName, residueName);
         }
 
         if (element.empty()) {
@@ -98,7 +113,7 @@ std::unique_ptr<Atom> PDBParser::parseAtomLine(const std::string& line, size_t a
     }
 }
 
-std::string PDBParser::extractElement(const std::string& atomName) {
+std::string PDBParser::extractElement(const std::string& atomName, const std::string& residueName) {
     // Remove whitespace
     std::string name = atomName;
     name.erase(std::remove_if(name.begin(), name.end(), ::isspace), name.end());
@@ -107,26 +122,65 @@ std::string PDBParser::extractElement(const std::string& atomName) {
         return "";
     }
 
-    // For most cases, the first character is the element
+    // First, try to resolve ambiguous cases using residue context
+    std::string resolvedElement = resolveAmbiguousElement(name, residueName);
+    if (!resolvedElement.empty() && isValidElement(resolvedElement)) {
+        return resolvedElement;
+    }
+
+    // Standard element extraction logic
     std::string element;
     element += std::toupper(name[0]);
     
     // Check for two-letter elements
     if (name.length() > 1) {
         char second = std::tolower(name[1]);
-        // Common two-letter elements in proteins
-        if ((element == "C" && second == 'l') ||  // Cl
-            (element == "B" && second == 'r') ||  // Br
-            (element == "M" && second == 'g') ||  // Mg
-            (element == "C" && second == 'a') ||  // Ca
-            (element == "F" && second == 'e') ||  // Fe
-            (element == "Z" && second == 'n') ||  // Zn
-            (element == "S" && second == 'e')) {  // Se
-            element += second;
+        
+        // Common two-letter elements in biological systems
+        std::string twoLetterElement = element + second;
+        if (isValidElement(twoLetterElement)) {
+            return twoLetterElement;
         }
     }
 
-    return element;
+    // Validate single-letter element
+    if (isValidElement(element)) {
+        return element;
+    }
+
+    return ""; // Could not determine valid element
+}
+
+bool PDBParser::isValidElement(const std::string& element) {
+    return AtomicSpecDatabase::getInstance().hasElement(element);
+}
+
+std::string PDBParser::resolveAmbiguousElement(const std::string& atomName, const std::string& residueName) {
+    // Handle common ambiguous cases with residue context
+    
+    // CA can be alpha carbon (in amino acids) or calcium (in metal sites)
+    if (atomName == "CA") {
+        // Check if we're in a standard amino acid residue
+        static const std::vector<std::string> aminoAcids = {
+            "ALA", "ARG", "ASN", "ASP", "CYS", "GLN", "GLU", "GLY", 
+            "HIS", "ILE", "LEU", "LYS", "MET", "PHE", "PRO", "SER", 
+            "THR", "TRP", "TYR", "VAL", "SEC", "PYL"
+        };
+        
+        for (const auto& aa : aminoAcids) {
+            if (residueName == aa) {
+                return "C"; // Alpha carbon in amino acid
+            }
+        }
+        
+        // If not in amino acid, likely calcium
+        return "Ca";
+    }
+    
+    // Handle other potential ambiguities
+    // (Add more cases as needed based on common PDB patterns)
+    
+    return ""; // No specific resolution
 }
 
 double PDBParser::parseCoordinate(const std::string& line, size_t start, size_t length) {

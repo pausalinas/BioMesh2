@@ -10,8 +10,8 @@ namespace biomesh2 {
  */
 struct AtomicSpec {
     std::string elementSymbol;
-    double radius;  // Angstroms
-    double mass;    // Daltons
+    double radius;  // Atomic radius in Angstroms (not van der Waals radius)
+    double mass;    // Atomic mass in Daltons
 
     AtomicSpec() : elementSymbol(""), radius(0.0), mass(0.0) {}
     AtomicSpec(const std::string& symbol, double r, double m) 
@@ -22,6 +22,7 @@ struct AtomicSpec {
  * @brief Atomic specifications database
  * 
  * Provides default atomic properties for common elements.
+ * Uses atomic radii (not van der Waals radii) for proper atomic representation.
  */
 class AtomicSpecDatabase {
 public:
