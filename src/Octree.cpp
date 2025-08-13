@@ -75,7 +75,7 @@ void Octree::subdivideRecursive(OctreeNode* node, int maxDepth, double minCellSi
         node->max.z - node->min.z
     });
     // Don't subdivide if children would be smaller than minCellSize
-    if (minDimension * 0.5 <= minCellSize) return;
+    if (minDimension * 0.5 < minCellSize) return;
     
     // Check occupancy condition if provided
     if (occupancyCheck && !occupancyCheck(*node)) return;
