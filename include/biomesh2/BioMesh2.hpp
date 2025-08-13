@@ -18,6 +18,7 @@
 #include "biomesh2/PDBParser.hpp"
 #include "biomesh2/AtomBuilder.hpp"
 #include "biomesh2/BoundingBox.hpp"
+#include "biomesh2/Octree.hpp"
 
 namespace biomesh2 {
 

@@ -4,6 +4,7 @@
 #include "biomesh2/AtomBuilder.hpp"
 #include "biomesh2/BoundingBox.hpp"
 #include "biomesh2/PDBParser.hpp"
+#include "biomesh2/Octree.hpp"
 #include <memory>
 #include <vector>
 
@@ -35,6 +36,12 @@ protected:
 };
 
 class PDBParserTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+class OctreeTest : public ::testing::Test {
 protected:
     void SetUp() override {}
     void TearDown() override {}
@@ -412,4 +419,166 @@ TEST_F(PDBParserTest, MixedValidInvalidElements) {
     auto atoms = PDBParser::parsePDBContent(pdbContent);
     ASSERT_EQ(1, atoms.size());
     EXPECT_EQ("C", atoms[0]->getChemicalElement());
+}
+
+// Octree tests
+TEST_F(OctreeTest, RootCellCreation) {
+    // Test creating root cell from domain coordinates
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    const OctreeNode& root = octree.getRoot();
+    EXPECT_EQ(0, root.depth);
+    EXPECT_TRUE(root.isLeaf);
+    EXPECT_NEAR(0.0, root.min.x, 1e-6);
+    EXPECT_NEAR(0.0, root.min.y, 1e-6);
+    EXPECT_NEAR(0.0, root.min.z, 1e-6);
+    EXPECT_NEAR(1.0, root.max.x, 1e-6);
+    EXPECT_NEAR(1.0, root.max.y, 1e-6);
+    EXPECT_NEAR(1.0, root.max.z, 1e-6);
+    EXPECT_NEAR(0.5, root.center.x, 1e-6);
+    EXPECT_NEAR(0.5, root.center.y, 1e-6);
+    EXPECT_NEAR(0.5, root.center.z, 1e-6);
+    EXPECT_NEAR(0.5, root.halfSize.x, 1e-6);
+    EXPECT_NEAR(0.5, root.halfSize.y, 1e-6);
+    EXPECT_NEAR(0.5, root.halfSize.z, 1e-6);
+}
+
+TEST_F(OctreeTest, RootCellFromBoundingBox) {
+    // Create atoms for bounding box
+    std::vector<std::unique_ptr<Atom>> atoms;
+    auto atom1 = std::make_unique<Atom>("C", 1.0, 12.0);
+    atom1->setCoordinates(0.0, 0.0, 0.0);
+    atoms.push_back(std::move(atom1));
+    
+    auto atom2 = std::make_unique<Atom>("N", 1.0, 14.0);
+    atom2->setCoordinates(2.0, 2.0, 2.0);
+    atoms.push_back(std::move(atom2));
+    
+    BoundingBox bbox(atoms, 0.0);
+    Octree octree(bbox);
+    
+    const OctreeNode& root = octree.getRoot();
+    EXPECT_EQ(0, root.depth);
+    EXPECT_TRUE(root.isLeaf);
+    EXPECT_NEAR(bbox.getMin().x, root.min.x, 1e-6);
+    EXPECT_NEAR(bbox.getMin().y, root.min.y, 1e-6);
+    EXPECT_NEAR(bbox.getMin().z, root.min.z, 1e-6);
+    EXPECT_NEAR(bbox.getMax().x, root.max.x, 1e-6);
+    EXPECT_NEAR(bbox.getMax().y, root.max.y, 1e-6);
+    EXPECT_NEAR(bbox.getMax().z, root.max.z, 1e-6);
+}
+
+TEST_F(OctreeTest, BasicSubdivision) {
+    // Test subdivision to depth 1
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    octree.subdivide(1); // Subdivide to depth 1
+    
+    const OctreeNode& root = octree.getRoot();
+    EXPECT_FALSE(root.isLeaf);
+    EXPECT_EQ(9, octree.getNodeCount()); // 1 root + 8 children
+    EXPECT_EQ(8, octree.getLeafCount()); // 8 leaf nodes
+    
+    // Check that all 8 children exist and are at depth 1
+    for (size_t i = 0; i < 8; ++i) {
+        ASSERT_NE(nullptr, root.children[i]);
+        EXPECT_EQ(1, root.children[i]->depth);
+        EXPECT_TRUE(root.children[i]->isLeaf);
+        EXPECT_NEAR(0.25, root.children[i]->halfSize.x, 1e-6);
+        EXPECT_NEAR(0.25, root.children[i]->halfSize.y, 1e-6);
+        EXPECT_NEAR(0.25, root.children[i]->halfSize.z, 1e-6);
+    }
+}
+
+TEST_F(OctreeTest, DeepSubdivision) {
+    // Test subdivision to depth 3 as specified in requirements
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    octree.subdivide(3); // Subdivide to depth 3
+    
+    const OctreeNode& root = octree.getRoot();
+    EXPECT_FALSE(root.isLeaf);
+    
+    // At depth 3: 1 + 8 + 64 + 512 = 585 total nodes
+    // Leaves: 8^3 = 512
+    EXPECT_EQ(585, octree.getNodeCount());
+    EXPECT_EQ(512, octree.getLeafCount());
+}
+
+TEST_F(OctreeTest, ContainsPoint) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    const OctreeNode& root = octree.getRoot();
+    
+    // Test points inside domain
+    EXPECT_TRUE(root.contains(Point3D(0.5, 0.5, 0.5)));
+    EXPECT_TRUE(root.contains(Point3D(0.0, 0.0, 0.0))); // boundary
+    EXPECT_TRUE(root.contains(Point3D(1.0, 1.0, 1.0))); // boundary
+    
+    // Test points outside domain
+    EXPECT_FALSE(root.contains(Point3D(-0.1, 0.5, 0.5)));
+    EXPECT_FALSE(root.contains(Point3D(1.1, 0.5, 0.5)));
+    EXPECT_FALSE(root.contains(Point3D(0.5, 0.5, 1.1)));
+}
+
+TEST_F(OctreeTest, FindLeaf) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    octree.subdivide(2); // Subdivide to depth 2
+    
+    // Test finding leaf for center point
+    Point3D centerPoint(0.5, 0.5, 0.5);
+    const OctreeNode* leaf = octree.findLeaf(centerPoint);
+    ASSERT_NE(nullptr, leaf);
+    EXPECT_TRUE(leaf->isLeaf);
+    EXPECT_TRUE(leaf->contains(centerPoint));
+    
+    // Test finding leaf for corner point
+    Point3D cornerPoint(0.0, 0.0, 0.0);
+    leaf = octree.findLeaf(cornerPoint);
+    ASSERT_NE(nullptr, leaf);
+    EXPECT_TRUE(leaf->isLeaf);
+    EXPECT_TRUE(leaf->contains(cornerPoint));
+    
+    // Test point outside domain
+    Point3D outsidePoint(-0.1, 0.5, 0.5);
+    leaf = octree.findLeaf(outsidePoint);
+    EXPECT_EQ(nullptr, leaf);
+}
+
+TEST_F(OctreeTest, NodeVolume) {
+    Octree octree(0.0, 0.0, 0.0, 2.0, 2.0, 2.0);
+    
+    const OctreeNode& root = octree.getRoot();
+    EXPECT_NEAR(8.0, root.getVolume(), 1e-6); // 2×2×2 = 8
+    
+    // Subdivide and check child volumes
+    octree.subdivide(1);
+    for (size_t i = 0; i < 8; ++i) {
+        ASSERT_NE(nullptr, root.children[i]);
+        EXPECT_NEAR(1.0, root.children[i]->getVolume(), 1e-6); // Each child: 1×1×1 = 1
+    }
+}
+
+TEST_F(OctreeTest, MinCellSizeTermination) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    // Set min cell size to 0.3, which should prevent subdivision beyond depth 1
+    // (depth 1 cells have size 0.5, depth 2 cells would have size 0.25 < 0.3)
+    octree.subdivide(10, 0.3); // High max depth, but limited by min cell size
+    
+    EXPECT_EQ(9, octree.getNodeCount()); // 1 root + 8 children (no further subdivision)
+    EXPECT_EQ(8, octree.getLeafCount());
+}
+
+TEST_F(OctreeTest, OccupancyCheck) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    // Define occupancy check that only allows subdivision for nodes containing point (0.5, 0.5, 0.5)
+    auto occupancyCheck = [](const OctreeNode& node) -> bool {
+        return node.contains(Point3D(0.5, 0.5, 0.5));
+    };
+    
+    octree.subdivide(3, 0.001, occupancyCheck);
+    
+    // Should have fewer nodes than full subdivision since occupancy check limits subdivision
+    EXPECT_LT(octree.getNodeCount(), 585);
+    EXPECT_GT(octree.getNodeCount(), 1); // But more than just root
 }

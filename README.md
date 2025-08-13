@@ -1,12 +1,13 @@
 # BioMesh2 - C++ PDB Parser and Molecular Bounding Box Calculator
 
-A modern C++ module for parsing PDB (Protein Data Bank) structure files, extracting atom information, enriching it with physical properties, and computing molecular bounding boxes.
+A modern C++ module for parsing PDB (Protein Data Bank) structure files, extracting atom information, enriching it with physical properties, computing molecular bounding boxes, and performing efficient 3D spatial operations using octree data structures.
 
 ## Features
 
 - **PDB File Parsing**: Read PDB files and extract atom coordinates and element information
 - **Atomic Property Enrichment**: Automatically assign atomic radii and masses based on element type
 - **Bounding Box Calculation**: Compute 3D bounding boxes that encompass all atoms including their van der Waals radii
+- **Octree Spatial Partitioning**: Efficient 3D space subdivision for spatial queries and geometric operations
 - **Modern C++ Design**: Uses RAII, STL containers, smart pointers, and follows best practices
 - **Unit Tested**: Comprehensive GoogleTest test suite
 - **Extensible**: Easy to add new elements and their properties
@@ -21,10 +22,13 @@ BioMesh2/
 │   ├── PDBParser.hpp         # PDB file parsing functionality
 │   ├── AtomBuilder.hpp       # Atom property enrichment
 │   ├── BoundingBox.hpp       # Molecular bounding box calculation
+│   ├── Octree.hpp            # Octree spatial partitioning data structure
 │   └── BioMesh2.hpp          # Main header with convenience functions
 ├── src/                      # Source files
 ├── tests/                    # GoogleTest unit tests
 ├── examples/                 # Example usage
+│   ├── main.cpp             # Basic PDB parsing and bounding box demo
+│   └── octree_demo.cpp      # Octree functionality demonstration
 ├── data/                     # Sample PDB files
 └── CMakeLists.txt           # CMake build configuration
 ```
@@ -58,6 +62,9 @@ make test
 
 # Run example
 ./biomesh2_example
+
+# Run octree demonstration
+./octree_demo
 ```
 
 ## Usage
@@ -162,6 +169,58 @@ auto corners = bbox.getCorners();
 
 // Check if point is inside
 bool inside = bbox.contains(Point3D(1.0, 2.0, 3.0));
+```
+
+### Octree
+
+Efficient 3D spatial partitioning data structure:
+
+```cpp
+// Create octree from domain coordinates
+Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+
+// Create octree from existing bounding box
+Octree octree(boundingBox);
+
+// Subdivide octree with various termination conditions
+octree.subdivide(maxDepth = 8, minCellSize = 0.001);
+
+// Subdivide with custom occupancy check
+octree.subdivide(maxDepth, minCellSize, [](const OctreeNode& node) {
+    return node.contains(Point3D(0.5, 0.5, 0.5));
+});
+
+// Access root node
+const OctreeNode& root = octree.getRoot();
+std::cout << "Root center: (" << root.center.x << ", " 
+          << root.center.y << ", " << root.center.z << ")" << std::endl;
+
+// Get tree statistics
+size_t totalNodes = octree.getNodeCount();
+size_t leafNodes = octree.getLeafCount();
+
+// Find containing leaf for a point
+const OctreeNode* leaf = octree.findLeaf(Point3D(0.25, 0.25, 0.25));
+
+// Print tree structure
+octree.printTree(maxDepth = 3);  // Show up to depth 3
+```
+
+#### OctreeNode Properties
+
+Each octree node contains:
+
+```cpp
+Point3D min, max;        // Bounding box coordinates
+Point3D center;          // Center point
+Point3D halfSize;        // Half-size in each dimension
+int depth;               // Depth level (root = 0)
+bool isLeaf;             // True if no children
+std::array<std::unique_ptr<OctreeNode>, 8> children;  // 8 octant children
+
+// Node methods
+bool contains(const Point3D& point);  // Check if point is inside
+double getVolume();                   // Get node volume
 ```
 
 ## Testing
