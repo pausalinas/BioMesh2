@@ -27,6 +27,10 @@ target_include_directories(biomesh2_lib PUBLIC include)
 add_executable(biomesh2_example examples/main.cpp)
 target_link_libraries(biomesh2_example biomesh2_lib)
 
+# Create executable for octree demonstration
+add_executable(octree_demo examples/octree_demo.cpp)
+target_link_libraries(octree_demo biomesh2_lib)
+
 # Enable testing
 enable_testing()
 
