@@ -31,6 +31,18 @@ target_link_libraries(biomesh2_example biomesh2_lib)
 add_executable(octree_demo examples/octree_demo.cpp)
 target_link_libraries(octree_demo biomesh2_lib)
 
+# Create executable for mesh generation demonstration
+add_executable(mesh_demo examples/mesh_demo.cpp)
+target_link_libraries(mesh_demo biomesh2_lib)
+
+# Create executable for mesh generation tests
+add_executable(mesh_test examples/mesh_test.cpp)
+target_link_libraries(mesh_test biomesh2_lib)
+
+# Create executable for comprehensive mesh demo
+add_executable(comprehensive_demo examples/comprehensive_demo.cpp)
+target_link_libraries(comprehensive_demo biomesh2_lib)
+
 # Enable testing
 enable_testing()
 

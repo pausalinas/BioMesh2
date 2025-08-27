@@ -149,10 +149,7 @@ void Octree::printTreeRecursive(const OctreeNode* node, const std::string& prefi
         for (size_t i = 0; i < 8; ++i) {
             if (node->children[i]) {
                 std::string newPrefix = prefix + "│  ";
-        for (size_t i = 0; i < OCTREE_CHILD_COUNT; ++i) {
-            if (node->children[i]) {
-                std::string newPrefix = prefix + "│  ";
-                if (i == OCTREE_CHILD_COUNT - 1) newPrefix = prefix + "   "; // Last child gets different spacing
+                if (i == 7) newPrefix = prefix + "   "; // Last child gets different spacing
                 printTreeRecursive(node->children[i].get(), newPrefix, maxDepth);
             }
         }
