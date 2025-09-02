@@ -43,6 +43,10 @@ target_link_libraries(mesh_test biomesh2_lib)
 add_executable(comprehensive_demo examples/comprehensive_demo.cpp)
 target_link_libraries(comprehensive_demo biomesh2_lib)
 
+# Create executable for stress analysis demonstration
+add_executable(stress_analysis_demo examples/stress_analysis_demo.cpp)
+target_link_libraries(stress_analysis_demo biomesh2_lib)
+
 # Enable testing
 enable_testing()
 
