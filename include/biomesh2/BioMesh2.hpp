@@ -8,6 +8,9 @@
  * - Parsing PDB structure files
  * - Extracting and enriching atom information with physical properties
  * - Computing molecular bounding boxes
+ * - Octree spatial partitioning and mesh generation
+ * - Finite element stress analysis and von Mises stress calculations
+ * - Statistical analysis for mutation scenario comparisons
  * 
  * @author BioMesh2 Team
  * @version 1.0.0
@@ -19,6 +22,9 @@
 #include "biomesh2/AtomBuilder.hpp"
 #include "biomesh2/BoundingBox.hpp"
 #include "biomesh2/Octree.hpp"
+#include "biomesh2/OctreeMeshGenerator.hpp"
+#include "biomesh2/StressAnalysis.hpp"
+#include "biomesh2/StatisticalAnalysis.hpp"
 
 namespace biomesh2 {
 

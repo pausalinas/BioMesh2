@@ -5,8 +5,11 @@
 #include "biomesh2/BoundingBox.hpp"
 #include "biomesh2/PDBParser.hpp"
 #include "biomesh2/Octree.hpp"
+#include "biomesh2/StressAnalysis.hpp"
+#include "biomesh2/StatisticalAnalysis.hpp"
 #include <memory>
 #include <vector>
+#include <cmath>
 
 using namespace biomesh2;
 
@@ -581,4 +584,237 @@ TEST_F(OctreeTest, OccupancyCheck) {
     // Should have fewer nodes than full subdivision since occupancy check limits subdivision
     EXPECT_LT(octree.getNodeCount(), 585);
     EXPECT_GT(octree.getNodeCount(), 1); // But more than just root
+}
+
+// StressAnalysis tests
+class StressAnalysisTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Create a simple test mesh
+        testMesh = createSimpleTestMesh();
+        loadConditions = {Point3D(0.5, 0.5, 1.0)};  // Single load at top center
+        hotspotElements = {0, 1, 2};  // First 3 elements as hotspots
+        randomElements = {3, 4, 5};   // Next 3 elements as random locations
+    }
+    
+    HexMesh createSimpleTestMesh() {
+        HexMesh mesh;
+        
+        // Create 8 nodes for 2x2x1 mesh (2 elements)
+        mesh.nodes = {
+            Point3D(0.0, 0.0, 0.0), Point3D(0.5, 0.0, 0.0), Point3D(1.0, 0.0, 0.0),
+            Point3D(0.0, 0.5, 0.0), Point3D(0.5, 0.5, 0.0), Point3D(1.0, 0.5, 0.0),
+            Point3D(0.0, 1.0, 0.0), Point3D(0.5, 1.0, 0.0), Point3D(1.0, 1.0, 0.0),
+            Point3D(0.0, 0.0, 0.5), Point3D(0.5, 0.0, 0.5), Point3D(1.0, 0.0, 0.5),
+            Point3D(0.0, 0.5, 0.5), Point3D(0.5, 0.5, 0.5), Point3D(1.0, 0.5, 0.5),
+            Point3D(0.0, 1.0, 0.5), Point3D(0.5, 1.0, 0.5), Point3D(1.0, 1.0, 0.5)
+        };
+        
+        // Create 8 hexahedral elements
+        mesh.elements = {
+            {0, 1, 4, 3, 9, 10, 13, 12},    // Element 0
+            {1, 2, 5, 4, 10, 11, 14, 13},   // Element 1
+            {3, 4, 7, 6, 12, 13, 16, 15},   // Element 2
+            {4, 5, 8, 7, 13, 14, 17, 16},   // Element 3
+            {9, 10, 13, 12, 0, 1, 4, 3},    // Element 4 (mirrored)
+            {10, 11, 14, 13, 1, 2, 5, 4},   // Element 5 (mirrored)
+        };
+        
+        return mesh;
+    }
+    
+    HexMesh testMesh;
+    std::vector<Point3D> loadConditions;
+    std::vector<size_t> hotspotElements;
+    std::vector<size_t> randomElements;
+};
+
+TEST_F(StressAnalysisTest, VonMisesStressCalculation) {
+    StressTensor stress(100e6, 80e6, 60e6, 10e6, 5e6, 5e6);  // MPa values
+    
+    double vonMises = StressAnalysis::computeVonMisesStress(stress);
+    
+    // Von Mises stress should be positive
+    EXPECT_GT(vonMises, 0.0);
+    
+    // For this specific stress state, verify reasonable value
+    EXPECT_GT(vonMises, 30e6);  // Should be substantial
+    EXPECT_LT(vonMises, 150e6); // But not unreasonably high
+}
+
+TEST_F(StressAnalysisTest, DefaultMaterialProperties) {
+    StressAnalysis analyzer;
+    const MaterialProperties& props = analyzer.getMaterialProperties();
+    
+    // Verify default material properties are reasonable
+    EXPECT_GT(props.youngModulus, 0);
+    EXPECT_GT(props.poissonRatio, 0);
+    EXPECT_LT(props.poissonRatio, 0.5);  // Physical constraint
+    EXPECT_GT(props.yieldStrength, 0);
+    EXPECT_GT(props.density, 0);
+}
+
+TEST_F(StressAnalysisTest, CustomMaterialProperties) {
+    MaterialProperties customMaterial(200e9, 0.33, 300e6, 8000.0);  // Steel-like
+    StressAnalysis analyzer(customMaterial);
+    
+    const MaterialProperties& props = analyzer.getMaterialProperties();
+    EXPECT_DOUBLE_EQ(props.youngModulus, 200e9);
+    EXPECT_DOUBLE_EQ(props.poissonRatio, 0.33);
+    EXPECT_DOUBLE_EQ(props.yieldStrength, 300e6);
+    EXPECT_DOUBLE_EQ(props.density, 8000.0);
+}
+
+TEST_F(StressAnalysisTest, PerformBasicAnalysis) {
+    StressAnalysis analyzer;
+    
+    AnalysisResults results = analyzer.performAnalysis(testMesh, loadConditions,
+                                                      MutationType::MUT1, 
+                                                      LocationType::HOTSPOT);
+    
+    // Verify analysis produces results for all elements
+    EXPECT_EQ(results.elementResults.size(), testMesh.getElementCount());
+    EXPECT_EQ(results.mutationType, MutationType::MUT1);
+    EXPECT_EQ(results.locationType, LocationType::HOTSPOT);
+    
+    // Verify all elements have valid stress results
+    for (const auto& result : results.elementResults) {
+        EXPECT_GE(result.vonMisesStress, 0.0);
+        EXPECT_LT(result.elementId, testMesh.getElementCount());
+    }
+}
+
+TEST_F(StressAnalysisTest, RelativeStressChanges) {
+    StressAnalysis analyzer;
+    
+    // Perform baseline analysis
+    AnalysisResults baseline = analyzer.performAnalysis(testMesh, loadConditions,
+                                                       MutationType::CONTROL);
+    
+    // Perform mutation analysis with different load conditions
+    std::vector<Point3D> mutationLoads = {Point3D(0.3, 0.3, 1.0), Point3D(0.7, 0.7, 1.0)};
+    AnalysisResults mutation = analyzer.performAnalysis(testMesh, mutationLoads,
+                                                       MutationType::MUT1);
+    
+    // Compute relative changes
+    auto relativeChanges = StressAnalysis::computeRelativeStressChanges(baseline, mutation);
+    
+    // Should have relative changes for all elements
+    EXPECT_EQ(relativeChanges.size(), testMesh.getElementCount());
+    
+    // Relative changes should be finite
+    for (const auto& change : relativeChanges) {
+        EXPECT_TRUE(std::isfinite(change.second));
+    }
+}
+
+TEST_F(StressAnalysisTest, StructuralFailureAssessment) {
+    StressAnalysis analyzer;
+    MaterialProperties lowYield(200e9, 0.3, 50e6, 7850.0);  // Low yield strength
+    analyzer.setMaterialProperties(lowYield);
+    
+    AnalysisResults results = analyzer.performAnalysis(testMesh, loadConditions);
+    
+    std::vector<double> safetyFactors = analyzer.assessStructuralFailureRisk(results);
+    
+    // Should have safety factor for each element
+    EXPECT_EQ(safetyFactors.size(), results.elementResults.size());
+    
+    // All safety factors should be positive
+    for (double factor : safetyFactors) {
+        EXPECT_GT(factor, 0.0);
+    }
+}
+
+// StatisticalAnalysis tests
+class StatisticalAnalysisTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        // Create test datasets
+        normalData = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0};
+        skewedData = {1.0, 1.1, 1.2, 1.3, 1.4, 2.0, 3.0, 5.0, 10.0, 20.0};
+        group1 = {1.0, 2.0, 3.0, 4.0, 5.0};
+        group2 = {6.0, 7.0, 8.0, 9.0, 10.0};
+    }
+    
+    std::vector<double> normalData;
+    std::vector<double> skewedData;
+    std::vector<double> group1;
+    std::vector<double> group2;
+};
+
+TEST_F(StatisticalAnalysisTest, StatisticalSummaryComputation) {
+    auto summary = StatisticalAnalysis::computeStatisticalSummary(normalData);
+    
+    EXPECT_EQ(summary.count, 10);
+    EXPECT_DOUBLE_EQ(summary.median, 5.5);
+    EXPECT_DOUBLE_EQ(summary.q25, 3.25);
+    EXPECT_DOUBLE_EQ(summary.q75, 7.75);
+    EXPECT_DOUBLE_EQ(summary.iqr, 4.5);
+    EXPECT_DOUBLE_EQ(summary.min, 1.0);
+    EXPECT_DOUBLE_EQ(summary.max, 10.0);
+    EXPECT_DOUBLE_EQ(summary.mean, 5.5);
+}
+
+TEST_F(StatisticalAnalysisTest, OutlierDetection) {
+    std::vector<double> dataWithOutliers = {1.0, 2.0, 3.0, 4.0, 5.0, 100.0};  // 100 is outlier
+    
+    auto summary = StatisticalAnalysis::computeStatisticalSummary(dataWithOutliers);
+    
+    EXPECT_EQ(summary.outliers.size(), 1);
+    EXPECT_DOUBLE_EQ(summary.outliers[0], 100.0);
+}
+
+TEST_F(StatisticalAnalysisTest, MannWhitneyUTest) {
+    auto result = StatisticalAnalysis::mannWhitneyUTest(group1, group2);
+    
+    // Groups are clearly separated, should show significant difference
+    EXPECT_LT(result.pValue, 0.05);
+    EXPECT_TRUE(result.isSignificant);
+    EXPECT_GT(result.effectSize, 0.7);  // Large effect size
+}
+
+TEST_F(StatisticalAnalysisTest, ExtractStressChangesByLocation) {
+    std::unordered_map<size_t, double> relativeChanges = {
+        {0, 0.1}, {1, 0.2}, {2, 0.3}, {3, 0.4}, {4, 0.5}, {5, 0.6}
+    };
+    std::vector<size_t> hotspots = {0, 1, 2};
+    std::vector<size_t> randoms = {3, 4, 5};
+    
+    std::vector<double> hotspotChanges, randomChanges;
+    StatisticalAnalysis::extractStressChangesByLocation(
+        relativeChanges, hotspots, randoms, hotspotChanges, randomChanges);
+    
+    EXPECT_EQ(hotspotChanges.size(), 3);
+    EXPECT_EQ(randomChanges.size(), 3);
+    EXPECT_DOUBLE_EQ(hotspotChanges[0], 0.1);
+    EXPECT_DOUBLE_EQ(hotspotChanges[1], 0.2);
+    EXPECT_DOUBLE_EQ(hotspotChanges[2], 0.3);
+    EXPECT_DOUBLE_EQ(randomChanges[0], 0.4);
+    EXPECT_DOUBLE_EQ(randomChanges[1], 0.5);
+    EXPECT_DOUBLE_EQ(randomChanges[2], 0.6);
+}
+
+TEST_F(StatisticalAnalysisTest, DistributionComparison) {
+    std::unordered_map<size_t, double> mut1Changes = {
+        {0, 0.1}, {1, 0.15}, {2, 0.2}, {3, 0.05}, {4, 0.08}, {5, 0.12}
+    };
+    std::unordered_map<size_t, double> mut2Changes = {
+        {0, 0.2}, {1, 0.25}, {2, 0.3}, {3, 0.1}, {4, 0.12}, {5, 0.18}
+    };
+    std::vector<size_t> hotspots = {0, 1, 2};
+    std::vector<size_t> randoms = {3, 4, 5};
+    
+    auto comparison = StatisticalAnalysis::compareStressDistributions(
+        mut1Changes, mut2Changes, hotspots, randoms);
+    
+    // Should have computed all statistical summaries
+    EXPECT_EQ(comparison.mut1Hotspots.count, 3);
+    EXPECT_EQ(comparison.mut1Random.count, 3);
+    EXPECT_EQ(comparison.mut2Hotspots.count, 3);
+    EXPECT_EQ(comparison.mut2Random.count, 3);
+    
+    // Hotspot values should be higher than random in both mutations
+    EXPECT_GT(comparison.mut1Hotspots.median, comparison.mut1Random.median);
+    EXPECT_GT(comparison.mut2Hotspots.median, comparison.mut2Random.median);
 }
