@@ -5,8 +5,11 @@
 #include "biomesh2/BoundingBox.hpp"
 #include "biomesh2/PDBParser.hpp"
 #include "biomesh2/Octree.hpp"
+#include "biomesh2/OctreeMeshGenerator.hpp"
 #include <memory>
 #include <vector>
+#include <fstream>
+#include <sstream>
 
 using namespace biomesh2;
 
@@ -42,6 +45,12 @@ protected:
 };
 
 class OctreeTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+class OctreeMeshGeneratorTest : public ::testing::Test {
 protected:
     void SetUp() override {}
     void TearDown() override {}
@@ -581,4 +590,185 @@ TEST_F(OctreeTest, OccupancyCheck) {
     // Should have fewer nodes than full subdivision since occupancy check limits subdivision
     EXPECT_LT(octree.getNodeCount(), 585);
     EXPECT_GT(octree.getNodeCount(), 1); // But more than just root
+}
+
+// OctreeMeshGenerator tests
+TEST_F(OctreeMeshGeneratorTest, BasicMeshGeneration) {
+    // Create a simple octree with one subdivision
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    octree.subdivide(1); // Creates 8 leaf cells
+    
+    // Generate mesh
+    HexMesh mesh = OctreeMeshGenerator::generateHexMesh(octree);
+    
+    // Should have 8 elements (one per leaf)
+    EXPECT_EQ(8, mesh.getElementCount());
+    
+    // Should have 27 unique nodes (3x3x3 grid)
+    EXPECT_EQ(27, mesh.getNodeCount());
+    
+    // Verify each element has 8 nodes
+    for (const auto& element : mesh.elements) {
+        EXPECT_EQ(8, element.size());
+        
+        // All node indices should be valid
+        for (int nodeIndex : element) {
+            EXPECT_GE(nodeIndex, 0);
+            EXPECT_LT(nodeIndex, static_cast<int>(mesh.getNodeCount()));
+        }
+    }
+}
+
+TEST_F(OctreeMeshGeneratorTest, GiDExportSingleElement) {
+    // Create octree with single element
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    HexMesh mesh = OctreeMeshGenerator::generateHexMesh(octree);
+    
+    // Should have 1 element and 8 nodes
+    EXPECT_EQ(1, mesh.getElementCount());
+    EXPECT_EQ(8, mesh.getNodeCount());
+    
+    // Export to temporary file
+    std::string filename = "/tmp/test_single_element.msh";
+    
+    // Test the export function doesn't throw
+    EXPECT_NO_THROW(OctreeMeshGenerator::exportToGiD(mesh, filename));
+    
+    // Verify file was created and has correct content
+    std::ifstream file(filename);
+    ASSERT_TRUE(file.is_open());
+    
+    std::string line;
+    
+    // Check header
+    std::getline(file, line);
+    EXPECT_EQ("MESH dimension 3 Elemtype Hexahedra Nnode 8", line);
+    
+    // Check coordinates section start
+    std::getline(file, line);
+    EXPECT_EQ("coordinates", line);
+    
+    // Read 8 coordinate lines
+    std::vector<std::string> coordLines;
+    for (int i = 0; i < 8; ++i) {
+        std::getline(file, line);
+        coordLines.push_back(line);
+    }
+    
+    // Check coordinates section end
+    std::getline(file, line);
+    EXPECT_EQ("end coordinates", line);
+    
+    // Check elements section start
+    std::getline(file, line);
+    EXPECT_EQ("elements", line);
+    
+    // Read element line
+    std::getline(file, line);
+    // Should start with "1 " (1-based indexing) and have 8 more numbers
+    EXPECT_TRUE(line.find("1 ") == 0);
+    
+    // Count numbers in element line
+    std::istringstream iss(line);
+    std::string token;
+    int count = 0;
+    while (iss >> token) {
+        count++;
+    }
+    EXPECT_EQ(9, count); // Element ID + 8 node indices
+    
+    // Check elements section end
+    std::getline(file, line);
+    EXPECT_EQ("end elements", line);
+    
+    file.close();
+}
+
+TEST_F(OctreeMeshGeneratorTest, GiDExportMultipleElements) {
+    // Create octree with multiple elements
+    Octree octree(0.0, 0.0, 0.0, 2.0, 2.0, 2.0);
+    octree.subdivide(1); // Creates 8 leaf cells
+    HexMesh mesh = OctreeMeshGenerator::generateHexMesh(octree);
+    
+    // Export to temporary file
+    std::string filename = "/tmp/test_multiple_elements.msh";
+    
+    // Test the export function doesn't throw
+    EXPECT_NO_THROW(OctreeMeshGenerator::exportToGiD(mesh, filename));
+    
+    // Verify file was created
+    std::ifstream file(filename);
+    ASSERT_TRUE(file.is_open());
+    
+    // Read and parse the file line by line
+    std::string line;
+    size_t coordCount = 0;
+    size_t elemCount = 0;
+    bool inCoordinates = false;
+    bool inElements = false;
+    
+    while (std::getline(file, line)) {
+        if (line == "coordinates") {
+            inCoordinates = true;
+            inElements = false;
+        } else if (line == "end coordinates") {
+            inCoordinates = false;
+        } else if (line == "elements") {
+            inElements = true;
+            inCoordinates = false;
+        } else if (line == "end elements") {
+            inElements = false;
+        } else if (inCoordinates && !line.empty()) {
+            // Count non-empty lines in coordinates section
+            if (line.find_first_not_of(" \t\r\n") != std::string::npos) {
+                coordCount++;
+            }
+        } else if (inElements && !line.empty()) {
+            // Count non-empty lines in elements section
+            if (line.find_first_not_of(" \t\r\n") != std::string::npos) {
+                elemCount++;
+            }
+        }
+    }
+    file.close();
+    
+    // Verify counts match expected values
+    EXPECT_EQ(mesh.getNodeCount(), coordCount);
+    EXPECT_EQ(mesh.getElementCount(), elemCount);
+}
+
+TEST_F(OctreeMeshGeneratorTest, GiDExportInvalidFilename) {
+    // Create a simple mesh
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    HexMesh mesh = OctreeMeshGenerator::generateHexMesh(octree);
+    
+    // Try to export to an invalid path
+    std::string invalidFilename = "/invalid_directory/test.msh";
+    
+    // Should throw an exception
+    EXPECT_THROW(OctreeMeshGenerator::exportToGiD(mesh, invalidFilename), std::runtime_error);
+}
+
+TEST_F(OctreeMeshGeneratorTest, GiDExportEmptyMesh) {
+    // Create empty mesh
+    HexMesh emptyMesh;
+    
+    // Export should work even with empty mesh
+    std::string filename = "/tmp/test_empty_mesh.msh";
+    EXPECT_NO_THROW(OctreeMeshGenerator::exportToGiD(emptyMesh, filename));
+    
+    // Verify file was created and has correct structure
+    std::ifstream file(filename);
+    ASSERT_TRUE(file.is_open());
+    
+    std::string content((std::istreambuf_iterator<char>(file)),
+                        std::istreambuf_iterator<char>());
+    file.close();
+    
+    // Should still have the proper structure
+    EXPECT_TRUE(content.find("MESH dimension 3 Elemtype Hexahedra Nnode 8") != std::string::npos);
+    EXPECT_TRUE(content.find("coordinates") != std::string::npos);
+    EXPECT_TRUE(content.find("end coordinates") != std::string::npos);
+    EXPECT_TRUE(content.find("elements") != std::string::npos);
+    EXPECT_TRUE(content.find("end elements") != std::string::npos);
 }

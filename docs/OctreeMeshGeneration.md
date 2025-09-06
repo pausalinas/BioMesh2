@@ -8,6 +8,7 @@ This module provides functionality to generate hexahedral finite element meshes 
 - **Node Deduplication**: Automatically detects and reuses shared corner nodes between adjacent elements
 - **Standard Element Ordering**: Uses standard hexahedral element node ordering compatible with finite element software
 - **Memory Efficient**: Uses hash maps for O(1) node lookup and deduplication
+- **GiD Export**: Export generated meshes to GiD format for use with finite element analysis software
 
 ## Usage
 
@@ -28,6 +29,28 @@ std::cout << "Elements: " << mesh.getElementCount() << "\n";
 // Access individual nodes and elements
 const biomesh2::Point3D& node0 = mesh.nodes[0];
 const std::array<int, 8>& element0 = mesh.elements[0];
+
+// Export mesh to GiD format
+biomesh2::OctreeMeshGenerator::exportToGiD(mesh, "output_mesh.msh");
+```
+
+### GiD Export Usage
+
+```cpp
+#include "biomesh2/OctreeMeshGenerator.hpp"
+
+// Generate mesh from octree
+biomesh2::Octree octree(0.0, 0.0, 0.0, 2.0, 2.0, 2.0);
+octree.subdivide(2);
+biomesh2::HexMesh mesh = biomesh2::OctreeMeshGenerator::generateHexMesh(octree);
+
+// Export to GiD format
+try {
+    biomesh2::OctreeMeshGenerator::exportToGiD(mesh, "my_mesh.msh");
+    std::cout << "Successfully exported mesh to my_mesh.msh" << std::endl;
+} catch (const std::exception& e) {
+    std::cerr << "Export failed: " << e.what() << std::endl;
+}
 ```
 
 ## Data Structures
@@ -53,6 +76,30 @@ Each hexahedral element uses the following node ordering:
 - Nodes 0-3: Bottom face (z = min)
 - Nodes 4-7: Top face (z = max)
 - Node ordering follows right-hand rule
+
+## GiD Mesh Format
+
+The exported GiD mesh files use the following format:
+
+```
+MESH dimension 3 Elemtype Hexahedra Nnode 8
+coordinates
+1 x1 y1 z1
+2 x2 y2 z2
+...
+end coordinates
+elements
+1 1 2 3 4 5 6 7 8
+2 9 10 11 12 13 14 15 16
+...
+end elements
+```
+
+Key features of the GiD export:
+- Uses 1-based indexing for both nodes and elements
+- Coordinates are written with 6 decimal places precision
+- Element connectivity follows the standard hexahedral node ordering
+- Compatible with GiD pre/post-processor and other FEM software
 
 ## Implementation Details
 

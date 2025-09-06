@@ -8,6 +8,8 @@ A modern C++ module for parsing PDB (Protein Data Bank) structure files, extract
 - **Atomic Property Enrichment**: Automatically assign atomic radii and masses based on element type
 - **Bounding Box Calculation**: Compute 3D bounding boxes that encompass all atoms including their van der Waals radii
 - **Octree Spatial Partitioning**: Efficient 3D space subdivision for spatial queries and geometric operations
+- **Hexahedral Mesh Generation**: Generate finite element meshes from octree structures
+- **GiD Mesh Export**: Export generated meshes to GiD format for finite element analysis
 - **Modern C++ Design**: Uses RAII, STL containers, smart pointers, and follows best practices
 - **Unit Tested**: Comprehensive GoogleTest test suite
 - **Extensible**: Easy to add new elements and their properties
@@ -23,12 +25,15 @@ BioMesh2/
 │   ├── AtomBuilder.hpp       # Atom property enrichment
 │   ├── BoundingBox.hpp       # Molecular bounding box calculation
 │   ├── Octree.hpp            # Octree spatial partitioning data structure
+│   ├── OctreeMeshGenerator.hpp # Hexahedral mesh generation and GiD export
 │   └── BioMesh2.hpp          # Main header with convenience functions
 ├── src/                      # Source files
 ├── tests/                    # GoogleTest unit tests
 ├── examples/                 # Example usage
 │   ├── main.cpp             # Basic PDB parsing and bounding box demo
-│   └── octree_demo.cpp      # Octree functionality demonstration
+│   ├── octree_demo.cpp      # Octree functionality demonstration
+│   ├── mesh_demo.cpp        # Mesh generation examples
+│   └── gid_export_demo.cpp  # GiD mesh export demonstration
 ├── data/                     # Sample PDB files
 └── CMakeLists.txt           # CMake build configuration
 ```
