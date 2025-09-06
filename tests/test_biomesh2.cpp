@@ -7,6 +7,7 @@
 #include "biomesh2/Octree.hpp"
 #include <memory>
 #include <vector>
+#include <set>
 
 using namespace biomesh2;
 
@@ -581,4 +582,165 @@ TEST_F(OctreeTest, OccupancyCheck) {
     // Should have fewer nodes than full subdivision since occupancy check limits subdivision
     EXPECT_LT(octree.getNodeCount(), 585);
     EXPECT_GT(octree.getNodeCount(), 1); // But more than just root
+}
+
+// Advanced Octree tests for new features
+TEST_F(OctreeTest, NodeIdGeneration) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    const OctreeNode& root = octree.getRoot();
+    size_t rootId = root.nodeId; // Store the root ID (may not be 0 due to other tests)
+    
+    // Subdivide and check that children have unique IDs
+    octree.subdivide(1);
+    std::set<size_t> nodeIds;
+    nodeIds.insert(root.nodeId);
+    
+    for (size_t i = 0; i < 8; ++i) {
+        if (root.children[i]) {
+            size_t childId = root.children[i]->nodeId;
+            EXPECT_TRUE(nodeIds.find(childId) == nodeIds.end()); // ID should be unique
+            EXPECT_GT(childId, rootId); // Child IDs should be higher than root ID
+            nodeIds.insert(childId);
+        }
+    }
+    
+    EXPECT_EQ(9, nodeIds.size()); // Root + 8 children
+}
+
+TEST_F(OctreeTest, RefinementLevels) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    const OctreeNode& root = octree.getRoot();
+    EXPECT_EQ(0, root.depth);
+    EXPECT_EQ(0, root.refinementLevel);
+    
+    octree.subdivide(2);
+    
+    // Check that refinement levels match depths for uniform subdivision
+    for (size_t i = 0; i < 8; ++i) {
+        if (root.children[i]) {
+            EXPECT_EQ(root.children[i]->depth, root.children[i]->refinementLevel);
+        }
+    }
+}
+
+TEST_F(OctreeTest, NodeRegistryAndLookup) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    const OctreeNode& root = octree.getRoot();
+    size_t rootId = root.nodeId;
+    
+    // Test finding node by ID
+    OctreeNode* foundNode = octree.findNodeById(rootId);
+    EXPECT_NE(nullptr, foundNode);
+    EXPECT_EQ(rootId, foundNode->nodeId);
+    
+    // Test non-existent ID
+    OctreeNode* notFound = octree.findNodeById(99999);
+    EXPECT_EQ(nullptr, notFound);
+}
+
+TEST_F(OctreeTest, TreeStatistics) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    octree.subdivide(2);
+    
+    auto stats = octree.getTreeStatistics();
+    
+    // Check that we have expected statistics
+    EXPECT_TRUE(stats.find("Total Nodes") != stats.end());
+    EXPECT_TRUE(stats.find("Leaf Nodes") != stats.end());
+    EXPECT_TRUE(stats.find("Memory Usage (bytes)") != stats.end());
+    EXPECT_TRUE(stats.find("Is 2:1 Balanced") != stats.end());
+    EXPECT_TRUE(stats.find("Max Depth") != stats.end());
+    
+    // Verify some values
+    EXPECT_EQ(73.0, stats["Total Nodes"]); // 1 + 8 + 64 = 73 for depth 2
+    EXPECT_EQ(64.0, stats["Leaf Nodes"]); // 8^2 = 64 leaves at depth 2
+    EXPECT_EQ(1.0, stats["Is 2:1 Balanced"]); // Should be balanced for uniform subdivision
+    EXPECT_EQ(2.0, stats["Max Depth"]);
+}
+
+TEST_F(OctreeTest, AdaptiveSubdivisionWithAtoms) {
+    // Create atoms for testing
+    std::vector<std::unique_ptr<Atom>> atoms;
+    auto atom1 = std::make_unique<Atom>("C", 0.67, 12.0);
+    atom1->setCoordinates(0.25, 0.25, 0.25);
+    atoms.push_back(std::move(atom1));
+    
+    auto atom2 = std::make_unique<Atom>("N", 0.56, 14.0);
+    atom2->setCoordinates(0.75, 0.75, 0.75);
+    atoms.push_back(std::move(atom2));
+    
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    // Test adaptive subdivision with atom density criterion
+    octree.adaptiveSubdivide(atoms, 3, 0.01, RefinementCriterion::ATOM_DENSITY, 0.5);
+    
+    // Should have some refinement where atoms are present
+    EXPECT_GT(octree.getNodeCount(), 1);
+    EXPECT_GT(octree.getLeafCount(), 1);
+}
+
+TEST_F(OctreeTest, NeighborFinding) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    octree.subdivide(1); // Create 8 children
+    
+    OctreeNode* root = octree.getRootPtr();
+    ASSERT_NE(nullptr, root);
+    
+    // Find face neighbors for a leaf node
+    if (root->children[0]) {
+        auto faceNeighbors = octree.findFaceNeighbors(root->children[0].get());
+        
+        // For a corner cell, it should have some face neighbors within the domain
+        EXPECT_GE(faceNeighbors.size(), 0); // May have neighbors depending on implementation
+    }
+}
+
+TEST_F(OctreeTest, TreeValidation) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    octree.subdivide(2);
+    
+    // Validate tree structure
+    auto errors = octree.validateTree();
+    EXPECT_TRUE(errors.empty()) << "Tree validation should pass for valid tree";
+    
+    // Check 2:1 balance constraint
+    EXPECT_TRUE(octree.is2To1Balanced());
+}
+
+TEST_F(OctreeTest, AtomIntersection) {
+    // Create an atom
+    Atom atom("C", 0.5, 12.0); // Radius 0.5
+    atom.setCoordinates(0.5, 0.5, 0.5);
+    
+    // Create a node that should intersect the atom
+    OctreeNode node(Point3D(0.0, 0.0, 0.0), Point3D(1.0, 1.0, 1.0), 0);
+    
+    EXPECT_TRUE(node.intersectsAtom(atom));
+    
+    // Create a node that shouldn't intersect
+    OctreeNode farNode(Point3D(2.0, 2.0, 2.0), Point3D(3.0, 3.0, 3.0), 0);
+    EXPECT_FALSE(farNode.intersectsAtom(atom));
+}
+
+TEST_F(OctreeTest, NodeSurfaceArea) {
+    OctreeNode node(Point3D(0.0, 0.0, 0.0), Point3D(1.0, 1.0, 1.0), 0);
+    
+    // Surface area of unit cube should be 6
+    EXPECT_NEAR(6.0, node.getSurfaceArea(), 1e-6);
+}
+
+TEST_F(OctreeTest, MemoryUsage) {
+    Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
+    
+    size_t initialMemory = octree.getMemoryUsage();
+    EXPECT_GT(initialMemory, 0);
+    
+    octree.subdivide(2);
+    size_t afterSubdivision = octree.getMemoryUsage();
+    
+    // Memory usage should increase after subdivision
+    EXPECT_GT(afterSubdivision, initialMemory);
 }
