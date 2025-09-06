@@ -43,6 +43,14 @@ target_link_libraries(mesh_test biomesh2_lib)
 add_executable(comprehensive_demo examples/comprehensive_demo.cpp)
 target_link_libraries(comprehensive_demo biomesh2_lib)
 
+# Create executable for GiD export demonstration
+add_executable(gid_export_demo examples/gid_export_demo.cpp)
+target_link_libraries(gid_export_demo biomesh2_lib)
+
+# Create executable for complete pipeline demonstration
+add_executable(complete_pipeline_demo examples/complete_pipeline_demo.cpp)
+target_link_libraries(complete_pipeline_demo biomesh2_lib)
+
 # Enable testing
 enable_testing()
 

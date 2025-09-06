@@ -63,6 +63,14 @@ public:
      * @return HexMesh containing nodes and element connectivity
      */
     static HexMesh generateHexMesh(const Octree& octree);
+    
+    /**
+     * @brief Export hexahedral mesh to GiD format
+     * @param mesh The mesh to export
+     * @param filename Output filename for the GiD mesh file
+     * @throws std::runtime_error if file cannot be created or written
+     */
+    static void exportToGiD(const HexMesh& mesh, const std::string& filename);
 
 private:
     /**

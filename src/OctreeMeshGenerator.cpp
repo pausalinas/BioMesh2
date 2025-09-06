@@ -1,5 +1,8 @@
 #include "biomesh2/OctreeMeshGenerator.hpp"
 #include <cmath>
+#include <fstream>
+#include <stdexcept>
+#include <iomanip>
 
 namespace biomesh2 {
 
@@ -104,6 +107,48 @@ std::vector<std::array<int, 8>> OctreeMeshGenerator::assignUniqueNodeIndices(
     }
     
     return elements;
+}
+
+void OctreeMeshGenerator::exportToGiD(const HexMesh& mesh, const std::string& filename) {
+    // Open output file
+    std::ofstream file(filename);
+    if (!file.is_open()) {
+        throw std::runtime_error("Unable to open file for writing: " + filename);
+    }
+    
+    // Set precision for floating point output
+    file << std::fixed << std::setprecision(6);
+    
+    // Write GiD mesh header
+    file << "MESH dimension 3 Elemtype Hexahedra Nnode 8\n";
+    
+    // Write coordinates section
+    file << "coordinates\n";
+    for (size_t i = 0; i < mesh.nodes.size(); ++i) {
+        const Point3D& node = mesh.nodes[i];
+        // GiD uses 1-based indexing for nodes
+        file << (i + 1) << " " << node.x << " " << node.y << " " << node.z << "\n";
+    }
+    file << "end coordinates\n";
+    
+    // Write elements section
+    file << "elements\n";
+    for (size_t i = 0; i < mesh.elements.size(); ++i) {
+        const auto& element = mesh.elements[i];
+        // GiD uses 1-based indexing for both elements and node references
+        file << (i + 1);
+        for (int nodeIndex : element) {
+            file << " " << (nodeIndex + 1);  // Convert from 0-based to 1-based
+        }
+        file << "\n";
+    }
+    file << "end elements\n";
+    
+    file.close();
+    
+    if (file.fail()) {
+        throw std::runtime_error("Error writing to file: " + filename);
+    }
 }
 
 } // namespace biomesh2
