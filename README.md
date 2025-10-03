@@ -1,17 +1,16 @@
 # BioMesh2 - C++ PDB Parser and Molecular Bounding Box Calculator
 
-A modern C++ module for parsing PDB (Protein Data Bank) structure files, extracting atom information, enriching it with physical properties, computing molecular bounding boxes, and generating hexahedral meshes using both octree and voxelization approaches.
+A modern C++ module for parsing PDB (Protein Data Bank) structure files, extracting atom information, enriching it with physical properties, computing molecular bounding boxes, and generating hexahedral meshes using uniform grid voxelization.
 
 ## Features
 
 - **PDB File Parsing**: Read PDB files and extract atom coordinates and element information
 - **Atomic Property Enrichment**: Automatically assign atomic radii and masses based on element type
 - **Bounding Box Calculation**: Compute 3D bounding boxes that encompass all atoms including their van der Waals radii
-- **Octree Spatial Partitioning**: Efficient adaptive 3D space subdivision for spatial queries and geometric operations
 - **Uniform Voxelization**: Tessellate molecular domains into regular cubic voxels for mesh generation
-- **Hexahedral Mesh Generation**: Generate finite element meshes using both octree and voxelization approaches
+- **Hexahedral Mesh Generation**: Generate finite element meshes from voxel grids
 - **Modern C++ Design**: Uses RAII, STL containers, smart pointers, and follows best practices
-- **Unit Tested**: Comprehensive GoogleTest test suite with 57 tests
+- **Unit Tested**: Comprehensive GoogleTest test suite with 38 tests
 - **Extensible**: Easy to add new elements and their properties
 
 ## Project Structure
@@ -24,8 +23,7 @@ BioMesh2/
 │   ├── PDBParser.hpp         # PDB file parsing functionality
 │   ├── AtomBuilder.hpp       # Atom property enrichment
 │   ├── BoundingBox.hpp       # Molecular bounding box calculation
-│   ├── Octree.hpp            # Octree spatial partitioning data structure
-│   ├── OctreeMeshGenerator.hpp  # Octree to hexahedral mesh converter
+│   ├── HexMesh.hpp           # Hexahedral mesh data structures
 │   ├── VoxelGrid.hpp         # Uniform voxelization data structure
 │   ├── VoxelMeshGenerator.hpp   # Voxel grid to hexahedral mesh converter
 │   └── BioMesh2.hpp          # Main header with convenience functions
@@ -33,11 +31,9 @@ BioMesh2/
 ├── tests/                    # GoogleTest unit tests
 ├── examples/                 # Example usage
 │   ├── main.cpp             # Basic PDB parsing and bounding box demo
-│   ├── octree_demo.cpp      # Octree functionality demonstration
 │   └── voxel_demo.cpp       # Voxelization functionality demonstration
 ├── data/                     # Sample PDB files
 ├── docs/                     # Documentation
-│   ├── OctreeMeshGeneration.md      # Octree meshing documentation
 │   └── VoxelizationMeshGeneration.md # Voxelization meshing documentation
 └── CMakeLists.txt           # CMake build configuration
 ```
@@ -71,9 +67,6 @@ make test
 
 # Run example
 ./biomesh2_example
-
-# Run octree demonstration
-./octree_demo
 
 # Run voxelization demonstration
 ./voxel_demo
@@ -183,58 +176,6 @@ auto corners = bbox.getCorners();
 bool inside = bbox.contains(Point3D(1.0, 2.0, 3.0));
 ```
 
-### Octree
-
-Efficient 3D spatial partitioning data structure:
-
-```cpp
-// Create octree from domain coordinates
-Octree octree(0.0, 0.0, 0.0, 1.0, 1.0, 1.0);
-
-// Create octree from existing bounding box
-Octree octree(boundingBox);
-
-// Subdivide octree with various termination conditions
-octree.subdivide(maxDepth = 8, minCellSize = 0.001);
-
-// Subdivide with custom occupancy check
-octree.subdivide(maxDepth, minCellSize, [](const OctreeNode& node) {
-    return node.contains(Point3D(0.5, 0.5, 0.5));
-});
-
-// Access root node
-const OctreeNode& root = octree.getRoot();
-std::cout << "Root center: (" << root.center.x << ", " 
-          << root.center.y << ", " << root.center.z << ")" << std::endl;
-
-// Get tree statistics
-size_t totalNodes = octree.getNodeCount();
-size_t leafNodes = octree.getLeafCount();
-
-// Find containing leaf for a point
-const OctreeNode* leaf = octree.findLeaf(Point3D(0.25, 0.25, 0.25));
-
-// Print tree structure
-octree.printTree(maxDepth = 3);  // Show up to depth 3
-```
-
-#### OctreeNode Properties
-
-Each octree node contains:
-
-```cpp
-Point3D min, max;        // Bounding box coordinates
-Point3D center;          // Center point
-Point3D halfSize;        // Half-size in each dimension
-int depth;               // Depth level (root = 0)
-bool isLeaf;             // True if no children
-std::array<std::unique_ptr<OctreeNode>, 8> children;  // 8 octant children
-
-// Node methods
-bool contains(const Point3D& point);  // Check if point is inside
-double getVolume();                   // Get node volume
-```
-
 ### VoxelGrid
 
 Uniform voxelization for mesh generation:
@@ -266,20 +207,14 @@ voxelGrid.printStatistics();
 
 ### Hexahedral Mesh Generation
 
-Generate finite element meshes from octrees or voxel grids:
+Generate finite element meshes from voxel grids:
 
 ```cpp
-#include "biomesh2/OctreeMeshGenerator.hpp"
 #include "biomesh2/VoxelMeshGenerator.hpp"
-
-// From octree (adaptive mesh)
-Octree octree(boundingBox);
-octree.subdivide(3);
-HexMesh octreeMesh = OctreeMeshGenerator::generateHexMesh(octree);
 
 // From voxel grid (uniform mesh)
 VoxelGrid voxelGrid(atoms, 1.0, 2.0);
-HexMesh voxelMesh = VoxelMeshGenerator::generateHexMesh(voxelGrid);
+HexMesh mesh = VoxelMeshGenerator::generateHexMesh(voxelGrid);
 
 // Access mesh data
 std::cout << "Nodes: " << mesh.getNodeCount() << "\n";
@@ -304,32 +239,26 @@ struct HexMesh {
 
 Each element uses standard hexahedral node ordering (0-3: bottom face, 4-7: top face).
 
-## Mesh Generation Approaches
+## Mesh Generation Approach
 
-BioMesh2 provides two complementary approaches for hexahedral mesh generation:
-
-### Octree-Based (Adaptive)
-- **Use case**: Adaptive FEM, hierarchical methods
-- **Advantages**: Lower element count, locally refined
-- **Characteristics**: Non-uniform elements, complex connectivity
+BioMesh2 uses uniform grid voxelization for hexahedral mesh generation:
 
 ### Voxelization-Based (Uniform)
 - **Use case**: Uniform analysis, image processing, structured grids
 - **Advantages**: Simple implementation, predictable structure, high node sharing
 - **Characteristics**: Uniform cubic elements, regular connectivity
 
-See [docs/VoxelizationMeshGeneration.md](docs/VoxelizationMeshGeneration.md) and [docs/OctreeMeshGeneration.md](docs/OctreeMeshGeneration.md) for detailed documentation.
+See [docs/VoxelizationMeshGeneration.md](docs/VoxelizationMeshGeneration.md) for detailed documentation.
 
 ## Testing
 
-The project includes comprehensive unit tests (57 tests) covering:
+The project includes comprehensive unit tests (38 tests) covering:
 
 - Atom constructor functionality
 - Atomic specification database operations
 - Property assignment correctness
 - Bounding box calculations
 - PDB parsing accuracy
-- Octree spatial operations
 - Voxel grid generation and occupancy
 - Hexahedral mesh generation
 

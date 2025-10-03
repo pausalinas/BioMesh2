@@ -1,7 +1,7 @@
 #pragma once
 
 #include "biomesh2/VoxelGrid.hpp"
-#include "biomesh2/OctreeMeshGenerator.hpp" // For HexMesh, Point3DHash, Point3DEqual
+#include "biomesh2/HexMesh.hpp"
 #include <vector>
 #include <array>
 #include <unordered_map>

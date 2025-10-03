@@ -111,7 +111,7 @@ Represents a single voxel in the grid:
 
 ### HexMesh
 
-Contains the generated mesh data (same as OctreeMeshGenerator):
+Contains the generated mesh data:
 - `nodes`: Vector of unique 3D node coordinates
 - `elements`: Vector of element connectivity arrays (8 node indices per hexahedron)
 
@@ -183,18 +183,6 @@ The voxel size parameter controls the mesh resolution:
 | < 0.5 Å | Very fine mesh | Very high element count, slow for large molecules |
 
 **Rule of thumb**: Voxel size should be comparable to or smaller than the smallest atomic radius (≈0.5 Å for hydrogen) for accurate representation.
-
-## Comparison with Octree Approach
-
-| Aspect | Voxelization | Octree |
-|--------|--------------|---------|
-| Mesh Structure | Uniform cubic elements | Adaptive refinement, non-uniform |
-| Resolution | Globally uniform | Locally adaptive |
-| Element Count | Higher for same accuracy | Lower with adaptive refinement |
-| Node Sharing | High (regular grid) | Variable (depends on refinement) |
-| Implementation | Simpler | More complex |
-| Use Case | Uniform analysis, image processing | Adaptive FEM, hierarchical methods |
-| Memory | Predictable, scales with domain | Depends on refinement criteria |
 
 ## Performance Characteristics
 

@@ -27,26 +27,6 @@ target_include_directories(biomesh2_lib PUBLIC include)
 add_executable(biomesh2_example examples/main.cpp)
 target_link_libraries(biomesh2_example biomesh2_lib)
 
-# Create executable for octree demonstration
-add_executable(octree_demo examples/octree_demo.cpp)
-target_link_libraries(octree_demo biomesh2_lib)
-
-# Create executable for mesh generation demonstration
-add_executable(mesh_demo examples/mesh_demo.cpp)
-target_link_libraries(mesh_demo biomesh2_lib)
-
-# Create executable for mesh generation tests
-add_executable(mesh_test examples/mesh_test.cpp)
-target_link_libraries(mesh_test biomesh2_lib)
-
-# Create executable for comprehensive mesh demo
-add_executable(comprehensive_demo examples/comprehensive_demo.cpp)
-target_link_libraries(comprehensive_demo biomesh2_lib)
-
-# Create executable for advanced octree demo
-add_executable(advanced_octree_demo examples/advanced_octree_demo.cpp)
-target_link_libraries(advanced_octree_demo biomesh2_lib)
-
 # Create executable for voxel demonstration
 add_executable(voxel_demo examples/voxel_demo.cpp)
 target_link_libraries(voxel_demo biomesh2_lib)
