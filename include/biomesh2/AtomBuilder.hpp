@@ -10,9 +10,9 @@ namespace biomesh2 {
 /**
  * @brief Builder class for enriching atoms with physical properties
  * 
- * Takes atoms with basic information and enriches them with atomic
+ * Takes atoms with basic information and enriches them with van der Waals
  * radius and mass from the atomic specification database.
- * Uses atomic radii (not van der Waals radii) for accurate atomic properties.
+ * Uses van der Waals radii for accurate molecular representation.
  */
 class AtomBuilder {
 public:

@@ -106,15 +106,15 @@ TEST_F(AtomicSpecTest, DefaultSpecsExist) {
     EXPECT_TRUE(db.hasElement("P"));
     EXPECT_TRUE(db.hasElement("S"));
     
-    // Test some specific values - using atomic radii (not van der Waals)
+    // Test some specific values - using van der Waals radii
     const auto& carbon = db.getSpec("C");
     EXPECT_EQ("C", carbon.elementSymbol);
-    EXPECT_EQ(0.67, carbon.radius);  // Atomic radius
+    EXPECT_EQ(1.70, carbon.radius);  // Van der Waals radius
     EXPECT_EQ(12.011, carbon.mass);
     
     const auto& hydrogen = db.getSpec("H");
     EXPECT_EQ("H", hydrogen.elementSymbol);
-    EXPECT_EQ(0.31, hydrogen.radius);  // Atomic radius
+    EXPECT_EQ(1.20, hydrogen.radius);  // Van der Waals radius
     EXPECT_EQ(1.008, hydrogen.mass);
 }
 
@@ -157,23 +157,23 @@ TEST_F(AtomBuilderTest, CorrectPropertyAssignment) {
     
     ASSERT_EQ(2, enrichedAtoms.size());
     
-    // Check carbon properties - using atomic radii
+    // Check carbon properties - using van der Waals radii
     const auto& enrichedCarbon = enrichedAtoms[0];
     EXPECT_EQ("C", enrichedCarbon->getChemicalElement());
     EXPECT_EQ(1.0, enrichedCarbon->getX());
     EXPECT_EQ(2.0, enrichedCarbon->getY());
     EXPECT_EQ(3.0, enrichedCarbon->getZ());
-    EXPECT_EQ(0.67, enrichedCarbon->getAtomicRadius());  // Atomic radius
+    EXPECT_EQ(1.70, enrichedCarbon->getAtomicRadius());  // Van der Waals radius
     EXPECT_EQ(12.011, enrichedCarbon->getAtomicMass());
     EXPECT_EQ(1, enrichedCarbon->getId());
     
-    // Check nitrogen properties - using atomic radii
+    // Check nitrogen properties - using van der Waals radii
     const auto& enrichedNitrogen = enrichedAtoms[1];
     EXPECT_EQ("N", enrichedNitrogen->getChemicalElement());
     EXPECT_EQ(4.0, enrichedNitrogen->getX());
     EXPECT_EQ(5.0, enrichedNitrogen->getY());
     EXPECT_EQ(6.0, enrichedNitrogen->getZ());
-    EXPECT_EQ(0.56, enrichedNitrogen->getAtomicRadius());  // Atomic radius
+    EXPECT_EQ(1.55, enrichedNitrogen->getAtomicRadius());  // Van der Waals radius
     EXPECT_EQ(14.007, enrichedNitrogen->getAtomicMass());
     EXPECT_EQ(2, enrichedNitrogen->getId());
 }

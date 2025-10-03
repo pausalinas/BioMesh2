@@ -9,7 +9,7 @@ namespace biomesh2 {
  * @brief Enhanced Atom structure with physical properties
  * 
  * Represents an atom with chemical element, coordinates, and physical properties.
- * Uses atomic radii (not van der Waals radii) for accurate atomic representation.
+ * Uses van der Waals radii for accurate molecular representation.
  */
 class Atom {
 public:
@@ -20,16 +20,16 @@ public:
     explicit Atom(const std::string& element);
 
     /**
-     * @brief Constructor with chemical element and atomic radius
+     * @brief Constructor with chemical element and radius
      * @param element Chemical element symbol
-     * @param radius Atomic radius in Angstroms
+     * @param radius Van der Waals radius in Angstroms
      */
     Atom(const std::string& element, double radius);
 
     /**
-     * @brief Constructor with chemical element, atomic radius, and atomic mass
+     * @brief Constructor with chemical element, radius, and atomic mass
      * @param element Chemical element symbol
-     * @param radius Atomic radius in Angstroms
+     * @param radius Van der Waals radius in Angstroms
      * @param mass Atomic mass in Daltons
      */
     Atom(const std::string& element, double radius, double mass);
