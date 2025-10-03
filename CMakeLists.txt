@@ -47,6 +47,10 @@ target_link_libraries(comprehensive_demo biomesh2_lib)
 add_executable(advanced_octree_demo examples/advanced_octree_demo.cpp)
 target_link_libraries(advanced_octree_demo biomesh2_lib)
 
+# Create executable for voxel demonstration
+add_executable(voxel_demo examples/voxel_demo.cpp)
+target_link_libraries(voxel_demo biomesh2_lib)
+
 # Enable testing
 enable_testing()
 

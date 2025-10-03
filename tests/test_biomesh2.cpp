@@ -5,6 +5,8 @@
 #include "biomesh2/BoundingBox.hpp"
 #include "biomesh2/PDBParser.hpp"
 #include "biomesh2/Octree.hpp"
+#include "biomesh2/VoxelGrid.hpp"
+#include "biomesh2/VoxelMeshGenerator.hpp"
 #include <memory>
 #include <vector>
 #include <set>
@@ -43,6 +45,18 @@ protected:
 };
 
 class OctreeTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+class VoxelGridTest : public ::testing::Test {
+protected:
+    void SetUp() override {}
+    void TearDown() override {}
+};
+
+class VoxelMeshGeneratorTest : public ::testing::Test {
 protected:
     void SetUp() override {}
     void TearDown() override {}
@@ -723,6 +737,237 @@ TEST_F(OctreeTest, AtomIntersection) {
     // Create a node that shouldn't intersect
     OctreeNode farNode(Point3D(2.0, 2.0, 2.0), Point3D(3.0, 3.0, 3.0), 0);
     EXPECT_FALSE(farNode.intersectsAtom(atom));
+}
+
+// VoxelGrid tests
+TEST_F(VoxelGridTest, BasicGridCreation) {
+    // Create test atoms
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(0.0, 0.0, 0.0);
+    atoms.back()->setId(0);
+    
+    // Create voxel grid
+    VoxelGrid grid(atoms, 1.0, 0.5);
+    
+    // Check grid properties
+    EXPECT_GT(grid.getTotalVoxelCount(), 0);
+    EXPECT_GT(grid.getOccupiedVoxelCount(), 0);
+    EXPECT_EQ(grid.getVoxelSize(), 1.0);
+}
+
+TEST_F(VoxelGridTest, VoxelOccupancy) {
+    // Create a carbon atom at origin with radius ~0.67 Å
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(5.0, 5.0, 5.0);
+    atoms.back()->setId(0);
+    
+    // Create grid with 1 Å voxels
+    VoxelGrid grid(atoms, 1.0, 1.0);
+    
+    // Check that at least one voxel is occupied
+    EXPECT_GT(grid.getOccupiedVoxelCount(), 0);
+    
+    // Check that the total equals occupied + empty
+    EXPECT_EQ(grid.getTotalVoxelCount(), 
+              grid.getOccupiedVoxelCount() + grid.getEmptyVoxelCount());
+}
+
+TEST_F(VoxelGridTest, MultipleAtoms) {
+    // Create multiple atoms
+    std::vector<std::unique_ptr<Atom>> atoms;
+    
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(0.0, 0.0, 0.0);
+    atoms.back()->setId(0);
+    
+    atoms.push_back(std::make_unique<Atom>("N", 0.56, 14.007));
+    atoms.back()->setCoordinates(2.0, 0.0, 0.0);
+    atoms.back()->setId(1);
+    
+    atoms.push_back(std::make_unique<Atom>("O", 0.48, 15.999));
+    atoms.back()->setCoordinates(0.0, 2.0, 0.0);
+    atoms.back()->setId(2);
+    
+    // Create grid
+    VoxelGrid grid(atoms, 0.5, 1.0);
+    
+    // Check that multiple voxels are occupied
+    EXPECT_GT(grid.getOccupiedVoxelCount(), 2);
+}
+
+TEST_F(VoxelGridTest, DifferentVoxelSizes) {
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(0.0, 0.0, 0.0);
+    atoms.back()->setId(0);
+    
+    // Test different voxel sizes
+    VoxelGrid grid1(atoms, 0.5, 1.0);
+    VoxelGrid grid2(atoms, 1.0, 1.0);
+    VoxelGrid grid3(atoms, 2.0, 1.0);
+    
+    // Larger voxel size should result in fewer total voxels
+    EXPECT_GT(grid1.getTotalVoxelCount(), grid2.getTotalVoxelCount());
+    EXPECT_GT(grid2.getTotalVoxelCount(), grid3.getTotalVoxelCount());
+}
+
+TEST_F(VoxelGridTest, InvalidVoxelSizeThrows) {
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(0.0, 0.0, 0.0);
+    atoms.back()->setId(0);
+    
+    // Negative voxel size should throw
+    EXPECT_THROW(VoxelGrid(atoms, -1.0, 0.0), std::invalid_argument);
+    
+    // Zero voxel size should throw
+    EXPECT_THROW(VoxelGrid(atoms, 0.0, 0.0), std::invalid_argument);
+}
+
+TEST_F(VoxelGridTest, GridDimensions) {
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(0.0, 0.0, 0.0);
+    atoms.back()->setId(0);
+    
+    VoxelGrid grid(atoms, 1.0, 1.0);
+    
+    const auto& dims = grid.getDimensions();
+    
+    // All dimensions should be positive
+    EXPECT_GT(dims[0], 0);
+    EXPECT_GT(dims[1], 0);
+    EXPECT_GT(dims[2], 0);
+    
+    // Total voxels should equal product of dimensions
+    EXPECT_EQ(grid.getTotalVoxelCount(), dims[0] * dims[1] * dims[2]);
+}
+
+TEST_F(VoxelGridTest, OccupiedVoxelProperties) {
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(5.0, 5.0, 5.0);
+    atoms.back()->setId(0);
+    
+    VoxelGrid grid(atoms, 1.0, 1.0);
+    
+    const auto& occupiedVoxels = grid.getOccupiedVoxels();
+    
+    // Check that occupied voxels have valid properties
+    for (const auto& voxel : occupiedVoxels) {
+        EXPECT_TRUE(voxel.occupied);
+        EXPECT_GT(voxel.atomIds.size(), 0);
+        
+        // Check that voxel bounds are consistent
+        EXPECT_LT(voxel.min.x, voxel.max.x);
+        EXPECT_LT(voxel.min.y, voxel.max.y);
+        EXPECT_LT(voxel.min.z, voxel.max.z);
+        
+        // Check that center is actually in the middle
+        double expectedCenterX = (voxel.min.x + voxel.max.x) * 0.5;
+        double expectedCenterY = (voxel.min.y + voxel.max.y) * 0.5;
+        double expectedCenterZ = (voxel.min.z + voxel.max.z) * 0.5;
+        
+        EXPECT_NEAR(voxel.center.x, expectedCenterX, 1e-10);
+        EXPECT_NEAR(voxel.center.y, expectedCenterY, 1e-10);
+        EXPECT_NEAR(voxel.center.z, expectedCenterZ, 1e-10);
+    }
+}
+
+// VoxelMeshGenerator tests
+TEST_F(VoxelMeshGeneratorTest, BasicMeshGeneration) {
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(0.0, 0.0, 0.0);
+    atoms.back()->setId(0);
+    
+    VoxelGrid grid(atoms, 1.0, 1.0);
+    HexMesh mesh = VoxelMeshGenerator::generateHexMesh(grid);
+    
+    // Mesh should have nodes and elements
+    EXPECT_GT(mesh.getNodeCount(), 0);
+    EXPECT_GT(mesh.getElementCount(), 0);
+    
+    // Number of elements should equal occupied voxels
+    EXPECT_EQ(mesh.getElementCount(), grid.getOccupiedVoxelCount());
+}
+
+TEST_F(VoxelMeshGeneratorTest, NodeDeduplication) {
+    // Create two atoms close to each other to create adjacent voxels
+    std::vector<std::unique_ptr<Atom>> atoms;
+    
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(5.0, 5.0, 5.0);
+    atoms.back()->setId(0);
+    
+    atoms.push_back(std::make_unique<Atom>("N", 0.56, 14.007));
+    atoms.back()->setCoordinates(5.5, 5.0, 5.0);
+    atoms.back()->setId(1);
+    
+    VoxelGrid grid(atoms, 0.5, 1.0);
+    HexMesh mesh = VoxelMeshGenerator::generateHexMesh(grid);
+    
+    // Node count should be less than 8 * element count due to sharing
+    EXPECT_LT(mesh.getNodeCount(), mesh.getElementCount() * 8);
+}
+
+TEST_F(VoxelMeshGeneratorTest, EmptyGrid) {
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.01, 12.011)); // Very small radius
+    atoms.back()->setCoordinates(0.0, 0.0, 0.0);
+    atoms.back()->setId(0);
+    
+    VoxelGrid grid(atoms, 10.0, 1.0); // Very large voxels
+    HexMesh mesh = VoxelMeshGenerator::generateHexMesh(grid);
+    
+    // If no voxels are occupied, mesh should be empty
+    if (grid.getOccupiedVoxelCount() == 0) {
+        EXPECT_EQ(mesh.getNodeCount(), 0);
+        EXPECT_EQ(mesh.getElementCount(), 0);
+    }
+}
+
+TEST_F(VoxelMeshGeneratorTest, ElementConnectivity) {
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(0.0, 0.0, 0.0);
+    atoms.back()->setId(0);
+    
+    VoxelGrid grid(atoms, 1.0, 1.0);
+    HexMesh mesh = VoxelMeshGenerator::generateHexMesh(grid);
+    
+    // Check that all element connectivity indices are valid
+    for (const auto& element : mesh.elements) {
+        for (int nodeIdx : element) {
+            EXPECT_GE(nodeIdx, 0);
+            EXPECT_LT(nodeIdx, static_cast<int>(mesh.getNodeCount()));
+        }
+    }
+}
+
+TEST_F(VoxelMeshGeneratorTest, StandardHexOrdering) {
+    std::vector<std::unique_ptr<Atom>> atoms;
+    atoms.push_back(std::make_unique<Atom>("C", 0.67, 12.011));
+    atoms.back()->setCoordinates(5.0, 5.0, 5.0);
+    atoms.back()->setId(0);
+    
+    VoxelGrid grid(atoms, 0.5, 1.0);  // Use smaller voxels to ensure occupancy
+    HexMesh mesh = VoxelMeshGenerator::generateHexMesh(grid);
+    
+    // Should have at least one element
+    ASSERT_GT(mesh.getElementCount(), 0);
+    
+    // Check first element has 8 nodes
+    const auto& element = mesh.elements[0];
+    EXPECT_EQ(element.size(), 8);
+    
+    // All 8 node indices should be valid
+    for (size_t i = 0; i < 8; ++i) {
+        EXPECT_GE(element[i], 0);
+        EXPECT_LT(element[i], static_cast<int>(mesh.getNodeCount()));
+    }
 }
 
 TEST_F(OctreeTest, NodeSurfaceArea) {
