@@ -194,6 +194,23 @@ For a typical protein with 1000 atoms in a 30×30×30 Å box:
 - 1 Å voxels: ~27,000 total voxels, typically 1-5% occupied
 - 0.5 Å voxels: ~216,000 total voxels, typically 1-5% occupied
 
+### OpenMP Parallelization
+
+The mesh generation step is parallelized using OpenMP when available:
+
+- **Parallelized Loop**: The computation of corner nodes for all occupied voxels runs in parallel
+- **Thread Safety**: Uses indexed array assignment instead of push_back for thread-safe operations
+- **Performance Impact**: Speedup is most noticeable for large structures with many occupied voxels (>10,000)
+- **Configuration**: Control thread count with `OMP_NUM_THREADS` environment variable
+- **Fallback**: Automatically runs serially if OpenMP is not available
+
+Example:
+```bash
+# Use 8 threads for mesh generation
+export OMP_NUM_THREADS=8
+./voxel_demo large_protein.pdb 0.5
+```
+
 ## Example Output
 
 ```

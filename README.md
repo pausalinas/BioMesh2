@@ -45,6 +45,7 @@ BioMesh2/
 - C++17 compatible compiler (GCC, Clang, or MSVC)
 - CMake 3.14 or later
 - GoogleTest (optional, for running tests)
+- OpenMP (optional, for parallel mesh generation)
 
 ### Build Instructions
 
@@ -71,6 +72,27 @@ make test
 # Run voxelization demonstration
 ./voxel_demo
 ```
+
+### OpenMP Parallelization
+
+BioMesh2 automatically uses OpenMP for parallel mesh generation when available. The mesh generation loop that computes corner nodes for voxels is parallelized for improved performance on multi-core systems, particularly beneficial for large molecular structures like viral capsids.
+
+**Configuring Thread Count:**
+
+```bash
+# Use 4 threads for parallel mesh generation
+export OMP_NUM_THREADS=4
+./voxel_demo
+
+# Or set for a single command
+OMP_NUM_THREADS=8 ./biomesh2_example data/protein.pdb 1.0
+```
+
+**Performance Notes:**
+- OpenMP parallelization provides speedup for large structures (thousands of voxels)
+- For small molecules with few hundred voxels, serial execution may be faster due to threading overhead
+- The optimal thread count depends on your CPU and the problem size
+- If OpenMP is not available, the code automatically falls back to serial execution
 
 ## Usage
 
