@@ -89,10 +89,15 @@ OMP_NUM_THREADS=8 ./biomesh2_example data/protein.pdb 1.0
 ```
 
 **Performance Notes:**
-- OpenMP parallelization provides speedup for large structures (thousands of voxels)
-- For small molecules with few hundred voxels, serial execution may be faster due to threading overhead
-- The optimal thread count depends on your CPU and the problem size
-- If OpenMP is not available, the code automatically falls back to serial execution
+- OpenMP parallelization is enabled automatically when OpenMP is available during compilation
+- The corner node computation loop is parallelized with static scheduling for load balancing
+- Performance characteristics:
+  - The mesh generation workload is primarily memory-bound rather than compute-bound
+  - Speedup potential depends on system memory bandwidth and cache architecture
+  - Best suited for very large structures (e.g., viral capsids with >100,000 voxels)
+  - For typical proteins with moderate voxel counts, threading overhead may dominate
+- The code gracefully falls back to serial execution if OpenMP is not available
+- Thread count can be controlled via `OMP_NUM_THREADS` environment variable
 
 ## Usage
 

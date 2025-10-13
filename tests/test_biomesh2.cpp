@@ -660,3 +660,36 @@ TEST_F(VoxelMeshGeneratorTest, StandardHexOrdering) {
     }
 }
 
+TEST_F(VoxelMeshGeneratorTest, ParallelConsistency) {
+    // Test that parallel execution produces consistent results
+    // Create a moderately sized structure for meaningful parallelization
+    std::vector<std::unique_ptr<Atom>> atoms;
+    
+    for (int i = 0; i < 10; ++i) {
+        for (int j = 0; j < 10; ++j) {
+            auto atom = std::make_unique<Atom>("C", 1.0, 12.011);
+            atom->setCoordinates(i * 2.0, j * 2.0, 5.0);
+            atom->setId(i * 10 + j);
+            atoms.push_back(std::move(atom));
+        }
+    }
+    
+    VoxelGrid grid(atoms, 0.8, 1.0);
+    
+    // Generate mesh multiple times - should be consistent
+    HexMesh mesh1 = VoxelMeshGenerator::generateHexMesh(grid);
+    HexMesh mesh2 = VoxelMeshGenerator::generateHexMesh(grid);
+    
+    // Verify consistency
+    EXPECT_EQ(mesh1.getNodeCount(), mesh2.getNodeCount());
+    EXPECT_EQ(mesh1.getElementCount(), mesh2.getElementCount());
+    
+    // Verify all elements are identical
+    ASSERT_EQ(mesh1.elements.size(), mesh2.elements.size());
+    for (size_t i = 0; i < mesh1.elements.size(); ++i) {
+        for (size_t j = 0; j < 8; ++j) {
+            EXPECT_EQ(mesh1.elements[i][j], mesh2.elements[i][j]);
+        }
+    }
+}
+
