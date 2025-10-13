@@ -15,6 +15,14 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra")
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 
+# Find OpenMP
+find_package(OpenMP)
+if(OpenMP_CXX_FOUND)
+    message(STATUS "OpenMP found - parallel mesh generation enabled")
+else()
+    message(STATUS "OpenMP not found - mesh generation will run serially")
+endif()
+
 # Include directories
 include_directories(include)
 
@@ -22,6 +30,11 @@ include_directories(include)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 add_library(biomesh2_lib ${SOURCES})
 target_include_directories(biomesh2_lib PUBLIC include)
+
+# Link OpenMP if available
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(biomesh2_lib PUBLIC OpenMP::OpenMP_CXX)
+endif()
 
 # Create executable for example usage
 add_executable(biomesh2_example examples/main.cpp)

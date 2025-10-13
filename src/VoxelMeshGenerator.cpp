@@ -1,6 +1,10 @@
 #include "biomesh2/VoxelMeshGenerator.hpp"
 #include <cmath>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 namespace biomesh2 {
 
 HexMesh VoxelMeshGenerator::generateHexMesh(const VoxelGrid& voxelGrid) {
@@ -13,11 +17,16 @@ HexMesh VoxelMeshGenerator::generateHexMesh(const VoxelGrid& voxelGrid) {
     }
     
     // Step 1: Compute corner nodes for all occupied voxels
+    // Pre-allocate vector for thread-safe indexed assignment
     std::vector<std::array<Point3D, 8>> allCornerNodes;
-    allCornerNodes.reserve(occupiedVoxels.size());
+    allCornerNodes.resize(occupiedVoxels.size());
     
-    for (const Voxel& voxel : occupiedVoxels) {
-        allCornerNodes.push_back(computeCornerNodes(voxel));
+    // Parallelize corner node computation with OpenMP
+    #ifdef _OPENMP
+    #pragma omp parallel for schedule(static)
+    #endif
+    for (size_t i = 0; i < occupiedVoxels.size(); ++i) {
+        allCornerNodes[i] = computeCornerNodes(occupiedVoxels[i]);
     }
     
     // Step 2: Assign unique node indices with deduplication
