@@ -22,14 +22,14 @@ void BoundingBox::calculateBounds(const std::vector<std::unique_ptr<Atom>>& atom
     double maxY = std::numeric_limits<double>::lowest();
     double maxZ = std::numeric_limits<double>::lowest();
 
-    // Find bounds considering atomic radii
+    // Find bounds considering van der Waals radii
     for (const auto& atom : atoms) {
         double x = atom->getX();
         double y = atom->getY();
         double z = atom->getZ();
         double radius = atom->getAtomicRadius();
 
-        // Expand coordinates by atomic radius to get sphere boundaries
+        // Expand coordinates by van der Waals radius to get sphere boundaries
         minX = std::min(minX, x - radius);
         minY = std::min(minY, y - radius);
         minZ = std::min(minZ, z - radius);
