@@ -63,11 +63,8 @@ bool HexMesh::exportToMsh(const std::string& filename) const {
     return true;
 }
 
-std::string HexMesh::generateMeshFilename(const std::string& pdbFilePath, double resolution) {
-    // Extract PDB code from filename
-    // Example: "path/to/1ABC.pdb" -> "1ABC"
-    // or "test_peptide.pdb" -> "test_peptide"
-    
+std::string HexMesh::extractBaseName(const std::string& pdbFilePath) {
+    // Extract filename from path
     size_t lastSlash = pdbFilePath.find_last_of("/\\");
     std::string filename = (lastSlash != std::string::npos) 
                           ? pdbFilePath.substr(lastSlash + 1) 
@@ -78,6 +75,13 @@ std::string HexMesh::generateMeshFilename(const std::string& pdbFilePath, double
     if (dotPos != std::string::npos) {
         filename = filename.substr(0, dotPos);
     }
+    
+    return filename;
+}
+
+std::string HexMesh::generateMeshFilename(const std::string& pdbFilePath, double resolution) {
+    // Extract base name from PDB file path
+    std::string baseName = extractBaseName(pdbFilePath);
     
     // Format resolution with one decimal place
     std::ostringstream resStream;
@@ -88,24 +92,15 @@ std::string HexMesh::generateMeshFilename(const std::string& pdbFilePath, double
     std::replace(resStr.begin(), resStr.end(), '.', '_');
     
     // Generate filename: {PDB_code}{resolution}.msh
-    return filename + resStr + ".msh";
+    return baseName + resStr + ".msh";
 }
 
 std::string HexMesh::generateLogFilename(const std::string& pdbFilePath) {
-    // Extract PDB code from filename
-    size_t lastSlash = pdbFilePath.find_last_of("/\\");
-    std::string filename = (lastSlash != std::string::npos) 
-                          ? pdbFilePath.substr(lastSlash + 1) 
-                          : pdbFilePath;
-    
-    // Remove .pdb extension if present
-    size_t dotPos = filename.find_last_of(".");
-    if (dotPos != std::string::npos) {
-        filename = filename.substr(0, dotPos);
-    }
+    // Extract base name from PDB file path
+    std::string baseName = extractBaseName(pdbFilePath);
     
     // Generate filename: {PDB_code}_output.log
-    return filename + "_output.log";
+    return baseName + "_output.log";
 }
 
 } // namespace biomesh2

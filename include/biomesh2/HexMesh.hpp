@@ -75,6 +75,14 @@ struct HexMesh {
      * @return Generated filename in format: {PDB_code}_output.log
      */
     static std::string generateLogFilename(const std::string& pdbFilePath);
+
+private:
+    /**
+     * @brief Extract base name from PDB file path (without extension)
+     * @param pdbFilePath Path to the PDB file
+     * @return Base name without path or extension
+     */
+    static std::string extractBaseName(const std::string& pdbFilePath);
 };
 
 } // namespace biomesh2
