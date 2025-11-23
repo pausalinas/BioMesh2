@@ -1,6 +1,6 @@
 # Voxelization-Based Hexahedral Mesh Generation
 
-This module provides functionality to generate hexahedral finite element meshes using a uniform voxelization approach. The implementation tessellates the molecular bounding box into uniform cubic voxels and creates hexahedral elements only for voxels that intersect with atom spheres.
+This module provides functionality to generate hexahedral finite element meshes using a uniform voxelization approach. The implementation tessellates the molecular bounding box into uniform cubic voxels and creates hexahedral elements only for voxels that intersect with atom spheres. The generated meshes can be exported to Gmsh format (.msh) for use in finite element analysis software.
 
 ## Features
 
@@ -48,6 +48,39 @@ BoundingBox bbox(enrichedAtoms, padding);
 // Create voxel grid with existing bounding box
 VoxelGrid voxelGrid(bbox, enrichedAtoms, voxelSize);
 ```
+
+### Exporting Mesh to File
+
+The generated mesh can be exported to Gmsh format (.msh) for use in finite element analysis software:
+
+```cpp
+// Generate mesh
+HexMesh mesh = VoxelMeshGenerator::generateHexMesh(voxelGrid);
+
+// Generate output filenames based on PDB file and resolution
+std::string meshFilename = HexMesh::generateMeshFilename("protein.pdb", voxelSize);
+std::string logFilename = HexMesh::generateLogFilename("protein.pdb");
+
+// Export mesh to .msh file
+if (mesh.exportToMsh(meshFilename)) {
+    std::cout << "Mesh exported successfully to " << meshFilename << "\n";
+}
+
+// Write processing information to log file
+std::ofstream logFile(logFilename);
+if (logFile.is_open()) {
+    logFile << "Voxel size: " << voxelSize << " Å\n";
+    logFile << "Nodes: " << mesh.getNodeCount() << "\n";
+    logFile << "Elements: " << mesh.getElementCount() << "\n";
+    logFile.close();
+}
+```
+
+**Output File Naming:**
+- Mesh files: `{PDB_code}{resolution}.msh` (e.g., `1ABC1_0.msh` for voxel size 1.0 Å)
+- Log files: `{PDB_code}_output.log` (e.g., `1ABC_output.log`)
+
+The decimal point in the resolution is replaced with an underscore for filesystem compatibility.
 
 ### Accessing Grid Information
 

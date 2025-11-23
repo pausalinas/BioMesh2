@@ -250,7 +250,29 @@ std::cout << "Elements: " << mesh.getElementCount() << "\n";
 // Access individual nodes and elements
 const Point3D& node = mesh.nodes[0];
 const std::array<int, 8>& element = mesh.elements[0];
+
+// Export mesh to Gmsh .msh format
+std::string meshFile = HexMesh::generateMeshFilename("protein.pdb", 1.0);
+mesh.exportToMsh(meshFile);  // Generates: protein1_0.msh
+
+// Generate log filename
+std::string logFile = HexMesh::generateLogFilename("protein.pdb");  // Generates: protein_output.log
 ```
+
+#### Mesh Export Format
+
+The mesh is exported in Gmsh format version 2.2:
+- Element type 5: 8-node hexahedron
+- Node numbering starts from 1
+- Standard hexahedral element ordering (nodes 0-3: bottom face, 4-7: top face)
+
+#### Output File Naming
+
+The library automatically generates descriptive filenames based on the PDB file and processing parameters:
+- **Mesh files**: `{PDB_code}{resolution}.msh` (e.g., `1ABC1_0.msh` for 1ABC.pdb with voxel size 1.0 Å)
+- **Log files**: `{PDB_code}_output.log` (e.g., `1ABC_output.log`)
+
+The resolution in the filename has the decimal point replaced with an underscore for filesystem compatibility.
 
 #### HexMesh Structure
 
