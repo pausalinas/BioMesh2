@@ -38,3 +38,7 @@ Thumbs.db
 # Test outputs
 Testing/
 CTestTestfile.cmake
+
+# Generated mesh and log files
+*.msh
+*.log

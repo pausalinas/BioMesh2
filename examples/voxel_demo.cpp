@@ -5,6 +5,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <fstream>
 
 using namespace biomesh2;
 
@@ -134,9 +135,22 @@ int main(int argc, char* argv[]) {
         std::string pdbFile = argv[1];
         double voxelSize = std::stod(argv[2]);
         
+        // Generate output filenames
+        std::string meshFilename = HexMesh::generateMeshFilename(pdbFile, voxelSize);
+        std::string logFilename = HexMesh::generateLogFilename(pdbFile);
+        
+        // Open log file
+        std::ofstream logFile(logFilename);
+        if (!logFile.is_open()) {
+            std::cerr << "Warning: Could not open log file " << logFilename << "\n";
+        }
+        
         try {
             auto basicAtoms = PDBParser::parsePDBFile(pdbFile);
             std::cout << "Loaded " << basicAtoms.size() << " atoms from " << pdbFile << "\n";
+            if (logFile.is_open()) {
+                logFile << "Loaded " << basicAtoms.size() << " atoms from " << pdbFile << "\n";
+            }
             
             AtomBuilder builder;
             auto enrichedAtoms = builder.buildAtoms(basicAtoms);
@@ -146,14 +160,52 @@ int main(int argc, char* argv[]) {
             VoxelGrid voxelGrid(enrichedAtoms, voxelSize, padding);
             voxelGrid.printStatistics();
             
+            // Write statistics to log file
+            if (logFile.is_open()) {
+                logFile << "Voxel size: " << voxelSize << " Å\n";
+                logFile << "Grid dimensions: " << voxelGrid.getDimensions()[0] << " x " 
+                        << voxelGrid.getDimensions()[1] << " x " 
+                        << voxelGrid.getDimensions()[2] << "\n";
+                logFile << "Total voxels: " << voxelGrid.getTotalVoxelCount() << "\n";
+                logFile << "Occupied voxels: " << voxelGrid.getOccupiedVoxelCount() << "\n";
+                logFile << "Empty voxels: " << voxelGrid.getEmptyVoxelCount() << "\n";
+            }
+            
             HexMesh mesh = VoxelMeshGenerator::generateHexMesh(voxelGrid);
             
             std::cout << "Hexahedral mesh:\n";
             std::cout << "  Nodes: " << mesh.getNodeCount() << "\n";
             std::cout << "  Elements: " << mesh.getElementCount() << "\n\n";
             
+            if (logFile.is_open()) {
+                logFile << "Hexahedral mesh:\n";
+                logFile << "  Nodes: " << mesh.getNodeCount() << "\n";
+                logFile << "  Elements: " << mesh.getElementCount() << "\n";
+            }
+            
+            // Export mesh to file
+            if (mesh.exportToMsh(meshFilename)) {
+                if (logFile.is_open()) {
+                    logFile << "Successfully exported mesh to: " << meshFilename << "\n";
+                }
+            } else {
+                std::cerr << "Failed to export mesh\n";
+                if (logFile.is_open()) {
+                    logFile << "ERROR: Failed to export mesh\n";
+                }
+            }
+            
+            if (logFile.is_open()) {
+                logFile.close();
+                std::cout << "Log file saved to: " << logFilename << "\n";
+            }
+            
         } catch (const std::exception& e) {
             std::cerr << "Error: " << e.what() << "\n";
+            if (logFile.is_open()) {
+                logFile << "ERROR: " << e.what() << "\n";
+                logFile.close();
+            }
             return 1;
         }
         
