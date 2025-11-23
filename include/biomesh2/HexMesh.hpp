@@ -5,6 +5,7 @@
 #include <array>
 #include <cmath>
 #include <unordered_map>
+#include <string>
 
 namespace biomesh2 {
 
@@ -51,6 +52,36 @@ struct HexMesh {
      * @brief Get number of elements in the mesh
      */
     size_t getElementCount() const { return elements.size(); }
+    
+    /**
+     * @brief Export mesh to Gmsh .msh format (version 2.2)
+     * @param filename Output filename for the mesh file
+     * @return true if export was successful, false otherwise
+     */
+    bool exportToMsh(const std::string& filename) const;
+    
+    /**
+     * @brief Generate output filename based on PDB code and resolution
+     * @param pdbFilePath Path to the PDB file
+     * @param resolution Resolution value (voxel size) used
+     * @return Generated filename in format: {PDB_code}{resolution}.msh
+     */
+    static std::string generateMeshFilename(const std::string& pdbFilePath, double resolution);
+    
+    /**
+     * @brief Generate log filename based on PDB code
+     * @param pdbFilePath Path to the PDB file
+     * @return Generated filename in format: {PDB_code}_output.log
+     */
+    static std::string generateLogFilename(const std::string& pdbFilePath);
+
+private:
+    /**
+     * @brief Extract base name from PDB file path (without extension)
+     * @param pdbFilePath Path to the PDB file
+     * @return Base name without path or extension
+     */
+    static std::string extractBaseName(const std::string& pdbFilePath);
 };
 
 } // namespace biomesh2
