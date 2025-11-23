@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <sstream>
 #include <algorithm>
+#include <cctype>
 
 namespace biomesh2 {
 
@@ -78,10 +79,15 @@ std::string HexMesh::extractBaseName(const std::string& pdbFilePath) {
                           ? pdbFilePath.substr(lastSlash + 1) 
                           : pdbFilePath;
     
-    // Remove .pdb extension if present
-    size_t dotPos = filename.find_last_of(".");
-    if (dotPos != std::string::npos) {
-        filename = filename.substr(0, dotPos);
+    // Remove .pdb extension if present (case-insensitive)
+    const std::string pdbExt = ".pdb";
+    if (filename.size() >= pdbExt.size()) {
+        std::string ending = filename.substr(filename.size() - pdbExt.size());
+        // Convert to lowercase for case-insensitive comparison
+        std::transform(ending.begin(), ending.end(), ending.begin(), ::tolower);
+        if (ending == pdbExt) {
+            filename = filename.substr(0, filename.size() - pdbExt.size());
+        }
     }
     
     return filename;
