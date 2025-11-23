@@ -7,6 +7,15 @@
 
 namespace biomesh2 {
 
+// Gmsh format constants
+namespace {
+    constexpr const char* GMSH_VERSION = "2.2";
+    constexpr int GMSH_FILE_TYPE = 0;  // ASCII format
+    constexpr int GMSH_DATA_SIZE = 8;  // Size of double in bytes
+    constexpr int GMSH_HEXAHEDRON_TYPE = 5;  // Element type for 8-node hexahedron
+    constexpr int GMSH_NO_TAGS = 0;  // No tags for elements
+}
+
 bool HexMesh::exportToMsh(const std::string& filename) const {
     std::ofstream outFile(filename);
     
@@ -15,9 +24,9 @@ bool HexMesh::exportToMsh(const std::string& filename) const {
         return false;
     }
     
-    // Write Gmsh format header (version 2.2, ASCII)
+    // Write Gmsh format header
     outFile << "$MeshFormat\n";
-    outFile << "2.2 0 8\n";
+    outFile << GMSH_VERSION << " " << GMSH_FILE_TYPE << " " << GMSH_DATA_SIZE << "\n";
     outFile << "$EndMeshFormat\n";
     
     // Write nodes section
@@ -41,9 +50,8 @@ bool HexMesh::exportToMsh(const std::string& filename) const {
     
     for (size_t i = 0; i < elements.size(); ++i) {
         // Element numbering starts from 1
-        // Element type 5 = 8-node hexahedron
         // Format: elm-number elm-type number-of-tags < tags > node-number-list
-        outFile << (i + 1) << " 5 0";  // 5 = hexahedron, 0 tags
+        outFile << (i + 1) << " " << GMSH_HEXAHEDRON_TYPE << " " << GMSH_NO_TAGS;
         
         // Write the 8 node indices (convert from 0-based to 1-based indexing)
         for (int j = 0; j < 8; ++j) {

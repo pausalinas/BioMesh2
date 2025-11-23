@@ -6,7 +6,6 @@
 #include <cmath>
 #include <unordered_map>
 #include <string>
-#include <fstream>
 
 namespace biomesh2 {
 
