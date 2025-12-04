@@ -44,6 +44,10 @@ target_link_libraries(biomesh2_example biomesh2_lib)
 add_executable(voxel_demo examples/voxel_demo.cpp)
 target_link_libraries(voxel_demo biomesh2_lib)
 
+# Create executable for empty voxel to GiD export
+add_executable(empty_voxel_to_gid examples/empty_voxel_to_gid.cpp)
+target_link_libraries(empty_voxel_to_gid biomesh2_lib)
+
 # Enable testing
 enable_testing()
 
