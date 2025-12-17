@@ -52,6 +52,10 @@ target_link_libraries(empty_voxel_to_gid biomesh2_lib)
 add_executable(filter_demo examples/filter_demo.cpp)
 target_link_libraries(filter_demo biomesh2_lib)
 
+# Create executable for filter workflow example
+add_executable(filter_workflow_example examples/filter_workflow_example.cpp)
+target_link_libraries(filter_workflow_example biomesh2_lib)
+
 # Enable testing
 enable_testing()
 
