@@ -48,6 +48,10 @@ target_link_libraries(voxel_demo biomesh2_lib)
 add_executable(empty_voxel_to_gid examples/empty_voxel_to_gid.cpp)
 target_link_libraries(empty_voxel_to_gid biomesh2_lib)
 
+# Create executable for filter demonstration
+add_executable(filter_demo examples/filter_demo.cpp)
+target_link_libraries(filter_demo biomesh2_lib)
+
 # Enable testing
 enable_testing()
 
