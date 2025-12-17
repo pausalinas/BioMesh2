@@ -29,8 +29,9 @@ std::vector<std::unique_ptr<Atom>> PDBParser::parsePDBContent(const std::string&
     size_t atomId = 0;
 
     while (std::getline(stream, line)) {
-        // Check if line starts with "ATOM"
-        if (line.length() >= 4 && line.substr(0, 4) == "ATOM") {
+        // Check if line starts with "ATOM" or "HETATM"
+        if (line.length() >= 4 && (line.substr(0, 4) == "ATOM" || 
+            (line.length() >= 6 && line.substr(0, 6) == "HETATM"))) {
             auto atom = parseAtomLine(line, atomId++);
             if (atom) {
                 atoms.push_back(std::move(atom));
@@ -39,7 +40,7 @@ std::vector<std::unique_ptr<Atom>> PDBParser::parsePDBContent(const std::string&
     }
 
     if (atoms.empty()) {
-        throw std::runtime_error("No valid ATOM records found in PDB content");
+        throw std::runtime_error("No valid ATOM or HETATM records found in PDB content");
     }
 
     return atoms;

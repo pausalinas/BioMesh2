@@ -7,6 +7,7 @@
  * This module provides functionality for:
  * - Parsing PDB structure files
  * - Extracting and enriching atom information with physical properties
+ * - Filtering molecules by type (proteins, nucleic acids, water, ions)
  * - Computing molecular bounding boxes
  * 
  * @author BioMesh2 Team
@@ -18,6 +19,8 @@
 #include "biomesh2/PDBParser.hpp"
 #include "biomesh2/AtomBuilder.hpp"
 #include "biomesh2/BoundingBox.hpp"
+#include "biomesh2/ResidueClassifier.hpp"
+#include "biomesh2/MoleculeFilter.hpp"
 
 namespace biomesh2 {
 
