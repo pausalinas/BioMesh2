@@ -30,6 +30,12 @@ std::unique_ptr<Atom> AtomBuilder::buildAtom(const Atom& basicAtom) const {
     auto enrichedAtom = std::make_unique<Atom>(element, spec.radius, spec.mass);
     enrichedAtom->setCoordinates(basicAtom.getX(), basicAtom.getY(), basicAtom.getZ());
     enrichedAtom->setId(basicAtom.getId());
+    
+    // Preserve residue information
+    enrichedAtom->setResidueName(basicAtom.getResidueName());
+    enrichedAtom->setAtomName(basicAtom.getAtomName());
+    enrichedAtom->setResidueNumber(basicAtom.getResidueNumber());
+    enrichedAtom->setChainID(basicAtom.getChainID());
 
     return enrichedAtom;
 }
