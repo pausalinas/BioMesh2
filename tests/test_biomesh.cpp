@@ -6,9 +6,12 @@
 #include "biomesh/PDBParser.hpp"
 #include "biomesh/VoxelGrid.hpp"
 #include "biomesh/VoxelMeshGenerator.hpp"
+#include "biomesh/VTKExporter.hpp"
 #include <memory>
 #include <vector>
 #include <set>
+#include <filesystem>
+#include <fstream>
 
 using namespace biomesh;
 
@@ -693,3 +696,30 @@ TEST_F(VoxelMeshGeneratorTest, ParallelConsistency) {
     }
 }
 
+class VTKExporterTest : public ::testing::Test {};
+
+TEST_F(VTKExporterTest, WritesValidUnstructuredGrid) {
+    HexMesh mesh;
+    mesh.nodes = {
+        Point3D(0.0, 0.0, 0.0), Point3D(1.0, 0.0, 0.0),
+        Point3D(1.0, 1.0, 0.0), Point3D(0.0, 1.0, 0.0),
+        Point3D(0.0, 0.0, 1.0), Point3D(1.0, 0.0, 1.0),
+        Point3D(1.0, 1.0, 1.0), Point3D(0.0, 1.0, 1.0)
+    };
+    mesh.elements.push_back({0, 1, 2, 3, 4, 5, 6, 7});
+
+    auto tmpPath = std::filesystem::temp_directory_path() / "biomesh_vtk_test.vtk";
+    ASSERT_TRUE(VTKExporter::exportToVTK(mesh, tmpPath.string()));
+
+    std::ifstream in(tmpPath);
+    ASSERT_TRUE(in.is_open());
+
+    std::string content{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
+    in.close();
+    std::filesystem::remove(tmpPath);
+
+    EXPECT_NE(content.find("POINTS 8 double"), std::string::npos);
+    EXPECT_NE(content.find("CELLS 1 9"), std::string::npos);
+    EXPECT_NE(content.find("CELL_TYPES 1"), std::string::npos);
+    EXPECT_NE(content.find("\n12"), std::string::npos);
+}
