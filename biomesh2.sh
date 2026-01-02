@@ -88,7 +88,8 @@ logv() { $verbose && ! $quiet && echo "$@"; }
 generate_default_config() {
     cat <<'EOF'
 [input]
-file = example.pdb
+# Placeholder input file; replace with your PDB path
+file = input.pdb
 
 [filter]
 type = protein-only
@@ -194,8 +195,9 @@ run_core_command() {
     if env "${env_vars[@]}" "BIOMESH2_OUTPUT_FILE=$effective_output" "${args[@]}"; then
         log "✓ Completed: $input_file"
         if [[ -n "$effective_output" ]]; then
-            mkdir -p "$(dirname "$effective_output")" 2>/dev/null || true
-            cat >"$effective_output" <<EOF
+            local summary_file="${effective_output}.summary"
+            mkdir -p "$(dirname "$summary_file")" 2>/dev/null || true
+            cat >"$summary_file" <<EOF
 # BioMesh2 run summary
 Input file: $input_file
 Output file: $effective_output
@@ -205,7 +207,7 @@ Padding: $padding
 Filter: $filter_type
 Executable: $CORE_CMD
 EOF
-            logv "Wrote summary to $effective_output"
+            logv "Wrote summary to $summary_file"
         fi
     else
         die "Run failed for: $input_file"
@@ -326,7 +328,7 @@ while [[ $idx -lt ${#args[@]} ]]; do
     --)
         ((idx++))
         for ((; idx < ${#args[@]}; idx++)); do
-            append_batch_items "${args[$idx]}"
+            cli_batch+=("${args[$idx]}")
         done
         break
         ;;
