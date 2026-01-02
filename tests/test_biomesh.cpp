@@ -714,7 +714,7 @@ TEST_F(VTKExporterTest, WritesValidUnstructuredGrid) {
     std::ifstream in(tmpPath);
     ASSERT_TRUE(in.is_open());
 
-    std::string content((std::istreambuf_iterator<char>(in)), std::istreambuf_iterator<char>());
+    std::string content{std::istreambuf_iterator<char>(in), std::istreambuf_iterator<char>()};
     in.close();
     std::filesystem::remove(tmpPath);
 

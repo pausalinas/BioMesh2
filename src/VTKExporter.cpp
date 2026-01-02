@@ -33,8 +33,8 @@ bool VTKExporter::exportToVTK(const HexMesh& mesh, const std::string& filename) 
     outFile << "CELLS " << cellCount << " " << (cellCount * indicesPerCell) << "\n";
     for (const auto& element : mesh.elements) {
         outFile << "8";
-        for (int idx : element) {
-            outFile << " " << idx;
+        for (size_t node = 0; node < element.size(); ++node) {
+            outFile << " " << static_cast<size_t>(element[node]);
         }
         outFile << "\n";
     }

@@ -29,7 +29,9 @@ void printUsage(const char* programName) {
 
 std::string toLower(const std::string& value) {
     std::string lowered = value;
-    std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) { return std::tolower(c); });
+    std::transform(lowered.begin(), lowered.end(), lowered.begin(), [](unsigned char c) {
+        return static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    });
     return lowered;
 }
 
@@ -87,8 +89,8 @@ std::string buildOutputFilename(const std::string& requestedOutput,
     std::ostringstream filename;
     filename << stem << "_" << pdbId << "_res" << resolutionTag << "_" << format;
 
-    const std::string& finalExt = extension.empty() ? format : extension;
-    fs::path finalPath = basePath.parent_path() / (filename.str() + "." + finalExt);
+    fs::path finalPath = basePath.parent_path() /
+        (filename.str() + "." + (extension.empty() ? format : extension));
     return finalPath.string();
 }
 
