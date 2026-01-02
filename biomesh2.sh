@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
-# BioMesh2 CLI wrapper
-
 set -o pipefail
 
 SCRIPT_NAME=$(basename "$0")
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEFAULT_CONFIG="${SCRIPT_DIR}/config/default.conf"
 VERSION="1.0.0"
-
-bold() { printf "\e[1m%s\e[0m" "$1"; }
 
 print_banner() {
     cat <<'EOF'
@@ -137,6 +133,14 @@ allowed_format() {
     esac
 }
 
+normalize_bool() {
+    case "$(echo "$1" | tr '[:upper:]' '[:lower:]')" in
+    1|true|yes|on) echo "true" ;;
+    0|false|no|off|"") echo "false" ;;
+    *) echo "$1" ;;
+    esac
+}
+
 find_core_executable() {
     local build_dir="${SCRIPT_DIR}/build"
     local candidates=("biomesh2_core" "filter_workflow_example" "biomesh2_example" "filter_demo")
@@ -214,6 +218,8 @@ if [[ -n "$config_file" ]]; then
     set_from_config "output.format" output_format
     set_from_config "options.verbose" verbose
     set_from_config "options.quiet" quiet
+    verbose=$(normalize_bool "$verbose")
+    quiet=$(normalize_bool "$quiet")
     [[ -n "$input_file" ]] && input_from_config=true
 fi
 
@@ -298,11 +304,9 @@ while [[ $idx -lt ${#args[@]} ]]; do
         die "Unknown option: $arg"
         ;;
     *)
-        if $input_from_config; then
+        if $input_from_config || [[ -z "$input_file" ]]; then
             input_file="$arg"
             input_from_config=false
-        elif [[ -z "$input_file" ]]; then
-            input_file="$arg"
         else
             batch_inputs+=("$arg")
         fi
@@ -311,12 +315,16 @@ while [[ $idx -lt ${#args[@]} ]]; do
     ((idx++))
 done
 
-IFS=',' read -r -a expanded_batch <<<"${batch_inputs[*]}"
-batch_inputs=()
-for item in "${expanded_batch[@]}"; do
-    [[ -z "$item" ]] && continue
-    batch_inputs+=("$(trim "$item")")
+expanded_batch=()
+for item in "${batch_inputs[@]}"; do
+    IFS=',' read -r -a parts <<<"$item"
+    for part in "${parts[@]}"; do
+        part=$(trim "$part")
+        [[ -z "$part" ]] && continue
+        expanded_batch+=("$part")
+    done
 done
+batch_inputs=("${expanded_batch[@]}")
 
 all_inputs=()
 if [[ -n "$input_file" ]]; then
