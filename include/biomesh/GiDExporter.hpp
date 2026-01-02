@@ -1,9 +1,9 @@
 #pragma once
 
-#include "biomesh2/HexMesh.hpp"
+#include "biomesh/HexMesh.hpp"
 #include <string>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief GiD mesh file exporter
@@ -27,4 +27,4 @@ public:
     static bool exportToGiD(const HexMesh& mesh, const std::string& filename);
 };
 
-} // namespace biomesh2
+} // namespace biomesh

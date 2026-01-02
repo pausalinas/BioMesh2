@@ -1,11 +1,11 @@
 #pragma once
 
-#include "biomesh2/Atom.hpp"
-#include "biomesh2/ResidueClassifier.hpp"
+#include "biomesh/Atom.hpp"
+#include "biomesh/ResidueClassifier.hpp"
 #include <vector>
 #include <memory>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Filter type presets for common filtering scenarios
@@ -121,4 +121,4 @@ private:
     bool keepOthers_;
 };
 
-} // namespace biomesh2
+} // namespace biomesh

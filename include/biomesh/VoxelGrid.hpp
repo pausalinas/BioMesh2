@@ -1,12 +1,12 @@
 #pragma once
 
-#include "biomesh2/BoundingBox.hpp"
-#include "biomesh2/Atom.hpp"
+#include "biomesh/BoundingBox.hpp"
+#include "biomesh/Atom.hpp"
 #include <vector>
 #include <memory>
 #include <array>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Index structure for 3D voxel grid
@@ -157,4 +157,4 @@ private:
     std::vector<Voxel*> voxelGrid_;        // 3D grid for fast lookup (nullptr for empty)
 };
 
-} // namespace biomesh2
+} // namespace biomesh

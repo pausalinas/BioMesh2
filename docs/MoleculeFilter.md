@@ -16,10 +16,10 @@ The MoleculeFilter component provides a flexible way to filter PDB files by biom
 ### Basic Usage
 
 ```cpp
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/MoleculeFilter.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/MoleculeFilter.hpp"
 
-using namespace biomesh2;
+using namespace biomesh;
 
 // Parse PDB file
 auto atoms = PDBParser::parsePDBFile("complex.pdb");
@@ -67,7 +67,7 @@ auto filtered = customFilter.filter(atoms);
 The `ResidueClassifier` class provides static methods to classify residues:
 
 ```cpp
-#include "biomesh2/ResidueClassifier.hpp"
+#include "biomesh/ResidueClassifier.hpp"
 
 // Check if residue is a protein
 bool isProtein = ResidueClassifier::isProtein("ALA");  // true
@@ -175,10 +175,10 @@ static bool isIon(const std::string& residueName);
 ## Complete Example
 
 ```cpp
-#include "biomesh2/BioMesh2.hpp"
+#include "biomesh/BioMesh.hpp"
 #include <iostream>
 
-using namespace biomesh2;
+using namespace biomesh;
 
 int main() {
     try {
@@ -219,7 +219,7 @@ int main() {
 
 ## Integration with Workflow
 
-The MoleculeFilter fits into the BioMesh2 pipeline as an optional preprocessing step:
+The MoleculeFilter fits into the BioMesh pipeline as an optional preprocessing step:
 
 ```
 PDB File → PDBParser → [MoleculeFilter] → AtomBuilder → VoxelGrid → HexMesh

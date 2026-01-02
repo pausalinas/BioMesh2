@@ -1,10 +1,10 @@
-#include "biomesh2/VoxelGrid.hpp"
+#include "biomesh/VoxelGrid.hpp"
 #include <cmath>
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
 
-namespace biomesh2 {
+namespace biomesh {
 
 VoxelGrid::VoxelGrid(const std::vector<std::unique_ptr<Atom>>& atoms, 
                      double voxelSize,
@@ -145,4 +145,4 @@ void VoxelGrid::printStatistics() const {
     std::cout << "=============================\n\n";
 }
 
-} // namespace biomesh2
+} // namespace biomesh

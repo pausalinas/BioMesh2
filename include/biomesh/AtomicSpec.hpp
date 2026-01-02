@@ -3,7 +3,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Atomic specification holding element properties
@@ -59,4 +59,4 @@ private:
     std::unordered_map<std::string, AtomicSpec> specs_;
 };
 
-} // namespace biomesh2
+} // namespace biomesh

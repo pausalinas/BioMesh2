@@ -1,6 +1,6 @@
-# BioMesh2 - C++ PDB Parser and Molecular Bounding Box Calculator
+# BioMesh - C++ PDB Parser and Molecular Bounding Box Calculator
 
-BioMesh2 is a modern C++ module for parsing PDB (Protein Data Bank) files, enriching atoms with physical properties, computing molecular bounding boxes, and performing efficient 3D spatial operations using octree data structures.
+BioMesh is a modern C++ module for parsing PDB (Protein Data Bank) files, enriching atoms with physical properties, computing molecular bounding boxes, and performing efficient 3D spatial operations using octree data structures.
 
 **Always reference these instructions first and fallback to search or bash commands only when you encounter unexpected information that does not match the info here.**
 
@@ -27,9 +27,9 @@ make -j4
 make test
 
 # Run examples to verify functionality
-./biomesh2_example
+./biomesh_example
 ./octree_demo
-./biomesh2_example ../data/test_peptide.pdb 2.0
+./biomesh_example ../data/test_peptide.pdb 2.0
 ```
 
 **TIMING EXPECTATIONS:**
@@ -59,15 +59,15 @@ make test
 - All tests must pass for the build to be considered successful
 
 **Manual validation scenarios:**
-1. **PDB Parsing**: `./biomesh2_example ../data/test_peptide.pdb 1.5` - should parse 15 atoms
-2. **Built-in Demo**: `./biomesh2_example` - should show step-by-step demonstration with 5 atoms
+1. **PDB Parsing**: `./biomesh_example ../data/test_peptide.pdb 1.5` - should parse 15 atoms
+2. **Built-in Demo**: `./biomesh_example` - should show step-by-step demonstration with 5 atoms
 3. **Octree Functionality**: `./octree_demo` - should create 585 nodes with 512 leaves at depth 3
 4. **Bounding Box Calculation**: Verify output includes volume, surface area, and correct dimensions
 
 ## Key Projects and Components
 
-### Core Library (`biomesh2_lib`)
-- **Location**: `src/` and `include/biomesh2/`
+### Core Library (`biomesh_lib`)
+- **Location**: `src/` and `include/biomesh/`
 - **Purpose**: Core functionality for PDB parsing and spatial operations
 - **Components**:
   - `Atom.hpp/cpp` - Enhanced atom class with physical properties
@@ -76,14 +76,14 @@ make test
   - `AtomBuilder.hpp/cpp` - Atom property enrichment
   - `BoundingBox.hpp/cpp` - 3D bounding box calculations
   - `Octree.hpp/cpp` - Spatial partitioning data structure
-  - `BioMesh2.hpp/cpp` - Main convenience API
+  - `BioMesh.hpp/cpp` - Main convenience API
 
 ### Example Programs
-- **`biomesh2_example`**: Demonstrates PDB parsing, atom enrichment, and bounding box calculation
+- **`biomesh_example`**: Demonstrates PDB parsing, atom enrichment, and bounding box calculation
 - **`octree_demo`**: Shows octree subdivision and spatial queries
 
-### Test Suite (`biomesh2_tests`)
-- **Location**: `tests/test_biomesh2.cpp`
+### Test Suite (`biomesh_tests`)
+- **Location**: `tests/test_biomesh.cpp`
 - **Coverage**: All components with 35 comprehensive tests
 - **Runtime**: <1 second for complete test suite
 
@@ -104,7 +104,7 @@ make -j4  # Takes 2-7 seconds depending on changes
 ```bash
 cd build
 make test        # Run via CTest
-./biomesh2_tests  # Run directly (shows detailed output)
+./biomesh_tests  # Run directly (shows detailed output)
 ```
 
 ### Adding New Chemical Elements
@@ -164,7 +164,7 @@ const OctreeNode* leaf = octree.findLeaf(Point3D(x, y, z));
 
 ## Expected Output Examples
 
-### biomesh2_example Output
+### biomesh_example Output
 ```
 === Atom Information ===
     ID Element      X (Å)      Y (Å)      Z (Å) Radius (Å)   Mass (Da)

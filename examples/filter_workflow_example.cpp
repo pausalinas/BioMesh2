@@ -1,17 +1,17 @@
-#include "biomesh2/BioMesh2.hpp"
+#include "biomesh/BioMesh.hpp"
 #include <iostream>
 #include <iomanip>
 
-using namespace biomesh2;
+using namespace biomesh;
 
 /**
  * Example demonstrating the complete workflow with MoleculeFilter
  * 
- * Shows how to integrate filtering into the BioMesh2 pipeline:
+ * Shows how to integrate filtering into the BioMesh pipeline:
  * PDB File → Parse → Filter → Enrich → Calculate Bounding Box
  */
 int main(int argc, char* argv[]) {
-    std::cout << "=== BioMesh2 Workflow with MoleculeFilter ===" << std::endl << std::endl;
+    std::cout << "=== BioMesh Workflow with MoleculeFilter ===" << std::endl << std::endl;
     
     // Use command line argument or default test file
     std::string pdbFile = "../data/mixed_molecules.pdb";

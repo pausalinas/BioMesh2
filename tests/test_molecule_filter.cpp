@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
-#include "biomesh2/ResidueClassifier.hpp"
-#include "biomesh2/MoleculeFilter.hpp"
-#include "biomesh2/Atom.hpp"
+#include "biomesh/ResidueClassifier.hpp"
+#include "biomesh/MoleculeFilter.hpp"
+#include "biomesh/Atom.hpp"
 #include <memory>
 #include <vector>
 
-using namespace biomesh2;
+using namespace biomesh;
 
 // Test fixtures
 class ResidueClassifierTest : public ::testing::Test {

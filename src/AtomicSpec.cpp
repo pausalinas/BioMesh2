@@ -1,7 +1,7 @@
-#include "biomesh2/AtomicSpec.hpp"
+#include "biomesh/AtomicSpec.hpp"
 #include <stdexcept>
 
-namespace biomesh2 {
+namespace biomesh {
 
 AtomicSpecDatabase& AtomicSpecDatabase::getInstance() {
     static AtomicSpecDatabase instance;
@@ -52,4 +52,4 @@ void AtomicSpecDatabase::addSpec(const AtomicSpec& spec) {
     specs_[spec.elementSymbol] = spec;
 }
 
-} // namespace biomesh2
+} // namespace biomesh

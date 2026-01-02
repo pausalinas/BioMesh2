@@ -1,6 +1,6 @@
-#include "biomesh2/BioMesh2.hpp"
+#include "biomesh/BioMesh.hpp"
 
-namespace biomesh2 {
+namespace biomesh {
 
 std::pair<std::vector<std::unique_ptr<Atom>>, BoundingBox> 
 processPDBFile(const std::string& pdbFilename, double padding) {
@@ -17,4 +17,4 @@ processPDBFile(const std::string& pdbFilename, double padding) {
     return std::make_pair(std::move(enrichedAtoms), boundingBox);
 }
 
-} // namespace biomesh2
+} // namespace biomesh

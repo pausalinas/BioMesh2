@@ -1,4 +1,4 @@
-# BioMesh2 - C++ PDB Parser and Molecular Bounding Box Calculator
+# BioMesh - C++ PDB Parser and Molecular Bounding Box Calculator
 
 A modern C++ module for parsing PDB (Protein Data Bank) structure files, extracting atom information, enriching it with physical properties, computing molecular bounding boxes, and generating hexahedral meshes using uniform grid voxelization.
 
@@ -16,8 +16,8 @@ A modern C++ module for parsing PDB (Protein Data Bank) structure files, extract
 ## Project Structure
 
 ```
-BioMesh2/
-├── include/biomesh2/          # Header files
+BioMesh/
+├── include/biomesh/          # Header files
 │   ├── Atom.hpp              # Enhanced Atom class with physical properties
 │   ├── AtomicSpec.hpp        # Atomic specifications database
 │   ├── PDBParser.hpp         # PDB file parsing functionality
@@ -26,7 +26,7 @@ BioMesh2/
 │   ├── HexMesh.hpp           # Hexahedral mesh data structures
 │   ├── VoxelGrid.hpp         # Uniform voxelization data structure
 │   ├── VoxelMeshGenerator.hpp   # Voxel grid to hexahedral mesh converter
-│   └── BioMesh2.hpp          # Main header with convenience functions
+│   └── BioMesh.hpp          # Main header with convenience functions
 ├── src/                      # Source files
 ├── tests/                    # GoogleTest unit tests
 ├── examples/                 # Example usage
@@ -51,8 +51,8 @@ BioMesh2/
 
 ```bash
 # Clone the repository
-git clone https://github.com/pausalinas/BioMesh2.git
-cd BioMesh2
+git clone https://github.com/pausalinas/BioMesh.git
+cd BioMesh
 
 # Create build directory
 mkdir build && cd build
@@ -67,7 +67,7 @@ make -j4
 make test
 
 # Run example
-./biomesh2_example
+./biomesh_example
 
 # Run voxelization demonstration
 ./voxel_demo
@@ -75,7 +75,7 @@ make test
 
 ### OpenMP Parallelization
 
-BioMesh2 automatically uses OpenMP for parallel mesh generation when available. The mesh generation loop that computes corner nodes for voxels is parallelized for improved performance on multi-core systems, particularly beneficial for large molecular structures like viral capsids.
+BioMesh automatically uses OpenMP for parallel mesh generation when available. The mesh generation loop that computes corner nodes for voxels is parallelized for improved performance on multi-core systems, particularly beneficial for large molecular structures like viral capsids.
 
 **Configuring Thread Count:**
 
@@ -85,7 +85,7 @@ export OMP_NUM_THREADS=4
 ./voxel_demo
 
 # Or set for a single command
-OMP_NUM_THREADS=8 ./biomesh2_example data/protein.pdb 1.0
+OMP_NUM_THREADS=8 ./biomesh_example data/protein.pdb 1.0
 ```
 
 **Performance Notes:**
@@ -104,8 +104,8 @@ OMP_NUM_THREADS=8 ./biomesh2_example data/protein.pdb 1.0
 ### Basic Usage
 
 ```cpp
-#include "biomesh2/BioMesh2.hpp"
-using namespace biomesh2;
+#include "biomesh/BioMesh.hpp"
+using namespace biomesh;
 
 // Process a PDB file in one step
 auto [atoms, boundingBox] = processPDBFile("protein.pdb", 2.0); // 2.0 Å padding
@@ -120,8 +120,8 @@ std::cout << "Dimensions: " << boundingBox.getDimensions().x << " × "
 ### Step-by-Step Usage
 
 ```cpp
-#include "biomesh2/BioMesh2.hpp"
-using namespace biomesh2;
+#include "biomesh/BioMesh.hpp"
+using namespace biomesh;
 
 // Step 1: Parse PDB file
 auto basicAtoms = PDBParser::parsePDBFile("protein.pdb");
@@ -237,7 +237,7 @@ voxelGrid.printStatistics();
 Generate finite element meshes from voxel grids:
 
 ```cpp
-#include "biomesh2/VoxelMeshGenerator.hpp"
+#include "biomesh/VoxelMeshGenerator.hpp"
 
 // From voxel grid (uniform mesh)
 VoxelGrid voxelGrid(atoms, 1.0, 2.0);
@@ -268,7 +268,7 @@ Each element uses standard hexahedral node ordering (0-3: bottom face, 4-7: top 
 
 ## Mesh Generation Approach
 
-BioMesh2 uses uniform grid voxelization for hexahedral mesh generation:
+BioMesh uses uniform grid voxelization for hexahedral mesh generation:
 
 ### Voxelization-Based (Uniform)
 - **Use case**: Uniform analysis, image processing, structured grids
@@ -292,7 +292,7 @@ The project includes comprehensive unit tests (38 tests) covering:
 Run tests with:
 ```bash
 cd build
-./biomesh2_tests
+./biomesh_tests
 # or
 make test
 ```
@@ -300,7 +300,7 @@ make test
 ## Example Output
 
 ```
-BioMesh2 C++ Module - PDB Parser and Bounding Box Calculator
+BioMesh C++ Module - PDB Parser and Bounding Box Calculator
 ===========================================================
 
 === Atom Information ===

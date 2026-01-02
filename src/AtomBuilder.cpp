@@ -1,8 +1,8 @@
-#include "biomesh2/AtomBuilder.hpp"
+#include "biomesh/AtomBuilder.hpp"
 #include <stdexcept>
 #include <set>
 
-namespace biomesh2 {
+namespace biomesh {
 
 std::vector<std::unique_ptr<Atom>> AtomBuilder::buildAtoms(
     const std::vector<std::unique_ptr<Atom>>& basicAtoms) const {
@@ -64,4 +64,4 @@ std::vector<std::string> AtomBuilder::getUnsupportedElements(
     return std::vector<std::string>(unsupportedSet.begin(), unsupportedSet.end());
 }
 
-} // namespace biomesh2
+} // namespace biomesh

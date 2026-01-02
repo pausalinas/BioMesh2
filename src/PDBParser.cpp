@@ -1,5 +1,5 @@
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/AtomicSpec.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/AtomicSpec.hpp"
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
@@ -7,7 +7,7 @@
 #include <cctype>
 #include <vector>
 
-namespace biomesh2 {
+namespace biomesh {
 
 std::vector<std::unique_ptr<Atom>> PDBParser::parsePDBFile(const std::string& filename) {
     std::ifstream file(filename);
@@ -234,4 +234,4 @@ double PDBParser::parseCoordinate(const std::string& line, size_t start, size_t 
     return std::stod(coordStr);
 }
 
-} // namespace biomesh2
+} // namespace biomesh
