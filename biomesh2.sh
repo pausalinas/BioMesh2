@@ -143,7 +143,7 @@ normalize_bool() {
 
 find_core_executable() {
     local build_dir="${SCRIPT_DIR}/build"
-    local candidates=("biomesh2_core" "filter_workflow_example" "biomesh2_example" "filter_demo")
+    local candidates=("filter_workflow_example" "biomesh2_example" "filter_demo")
     for bin in "${candidates[@]}"; do
         if [[ -x "${build_dir}/${bin}" ]]; then
             CORE_CMD="${build_dir}/${bin}"
@@ -223,42 +223,55 @@ if [[ -n "$config_file" ]]; then
     [[ -n "$input_file" ]] && input_from_config=true
 fi
 
+require_value() {
+    local option="$1"
+    local next_index="$2"
+    local total="$3"
+    (( next_index < total )) || die "Option ${option} requires a value."
+}
+
 args=("$@")
 idx=0
 while [[ $idx -lt ${#args[@]} ]]; do
     arg="${args[$idx]}"
     case "$arg" in
     -i|--input)
+        require_value "$arg" $((idx + 1)) ${#args[@]}
         ((idx++)); input_file="${args[$idx]}"; input_from_config=false
         ;;
     --input=*)
         input_file="${arg#*=}"; input_from_config=false
         ;;
     -o|--output)
+        require_value "$arg" $((idx + 1)) ${#args[@]}
         ((idx++)); output_file="${args[$idx]}"
         ;;
     --output=*)
         output_file="${arg#*=}"
         ;;
     -v|--voxel-size)
+        require_value "$arg" $((idx + 1)) ${#args[@]}
         ((idx++)); voxel_size="${args[$idx]}"
         ;;
     --voxel-size=*)
         voxel_size="${arg#*=}"
         ;;
     -p|--padding)
+        require_value "$arg" $((idx + 1)) ${#args[@]}
         ((idx++)); padding="${args[$idx]}"
         ;;
     --padding=*)
         padding="${arg#*=}"
         ;;
     -f|--format)
+        require_value "$arg" $((idx + 1)) ${#args[@]}
         ((idx++)); output_format="${args[$idx]}"
         ;;
     --format=*)
         output_format="${arg#*=}"
         ;;
     --filter)
+        require_value "$arg" $((idx + 1)) ${#args[@]}
         ((idx++)); filter_type="${args[$idx]}"
         ;;
     --filter=*)
@@ -274,6 +287,7 @@ while [[ $idx -lt ${#args[@]} ]]; do
         exit 0
         ;;
     --batch)
+        require_value "$arg" $((idx + 1)) ${#args[@]}
         ((idx++)); batch_inputs+=("${args[$idx]}")
         ;;
     --batch=*)
@@ -353,8 +367,8 @@ print_banner
 log "BioMesh2 configuration:"
 log "  Inputs      : ${all_inputs[*]}"
 log "  Output file : $output_file"
-log "  Voxel size  : $voxel_size Å"
-log "  Padding     : $padding Å"
+log "  Voxel size  : $voxel_size Angstroms"
+log "  Padding     : $padding Angstroms"
 log "  Filter type : $filter_type"
 log "  Format      : $output_format"
 log "  Verbose     : $verbose"
