@@ -9,7 +9,7 @@ VERSION="1.0.0"
 print_banner() {
     cat <<'EOF'
 ========================
-   BioMesh2 CLI Runner
+   BioMesh CLI Runner
 ========================
 EOF
 }
@@ -144,7 +144,7 @@ append_batch_items() {
 
 find_core_executable() {
     local build_dir="${SCRIPT_DIR}/build"
-    local candidates=("filter_workflow_example" "biomesh2_example" "filter_demo")
+    local candidates=("filter_workflow_example" "biomesh_example" "filter_demo")
     for bin in "${candidates[@]}"; do
         if [[ -x "${build_dir}/${bin}" ]]; then
             CORE_CMD="${build_dir}/${bin}"
@@ -152,7 +152,7 @@ find_core_executable() {
             return 0
         fi
     done
-    die "No BioMesh2 executable found. Build the project in ${build_dir} first."
+    die "No BioMesh executable found. Build the project in ${build_dir} first."
 }
 
 run_core_command() {
@@ -176,7 +176,7 @@ run_core_command() {
         effective_output="${base}_${stem}_${run_index}.${ext}"
     fi
     case "$CORE_NAME" in
-    biomesh2_example)
+    biomesh_example)
         args+=("$input_file" "$padding")
         ;;
     filter_workflow_example|filter_demo)
@@ -193,7 +193,7 @@ run_core_command() {
             local summary_file="${effective_output}.summary"
             mkdir -p "$(dirname "$summary_file")" 2>/dev/null || true
             cat >"$summary_file" <<EOF
-# BioMesh2 run summary
+# BioMesh run summary
 Input file: $input_file
 Output file: $effective_output
 Output format: $output_format
@@ -389,7 +389,7 @@ allowed_format "$output_format" || die "Invalid output format: $output_format"
 
 print_banner
 
-log "BioMesh2 configuration:"
+log "BioMesh configuration:"
 log "  Inputs      : ${all_inputs[*]}"
 log "  Output file : $output_file"
 log "  Voxel size  : $voxel_size Angstroms"

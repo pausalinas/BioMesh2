@@ -1,10 +1,10 @@
 #pragma once
 
-#include "biomesh2/Atom.hpp"
+#include "biomesh/Atom.hpp"
 #include <vector>
 #include <memory>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief 3D point structure
@@ -98,4 +98,4 @@ private:
     Point3D max_;
 };
 
-} // namespace biomesh2
+} // namespace biomesh

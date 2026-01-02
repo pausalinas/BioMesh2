@@ -1,9 +1,9 @@
-#include "biomesh2/GiDExporter.hpp"
+#include "biomesh/GiDExporter.hpp"
 #include <fstream>
 #include <iomanip>
 #include <iostream>
 
-namespace biomesh2 {
+namespace biomesh {
 
 bool GiDExporter::exportToGiD(const HexMesh& mesh, const std::string& filename) {
     // Check if mesh is empty
@@ -54,4 +54,4 @@ bool GiDExporter::exportToGiD(const HexMesh& mesh, const std::string& filename) 
     return true;
 }
 
-} // namespace biomesh2
+} // namespace biomesh

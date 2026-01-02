@@ -1,12 +1,12 @@
 #pragma once
 
-#include "biomesh2/BoundingBox.hpp" // For Point3D
+#include "biomesh/BoundingBox.hpp" // For Point3D
 #include <vector>
 #include <array>
 #include <cmath>
 #include <unordered_map>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Hash function for Point3D to enable use in std::unordered_map
@@ -53,4 +53,4 @@ struct HexMesh {
     size_t getElementCount() const { return elements.size(); }
 };
 
-} // namespace biomesh2
+} // namespace biomesh

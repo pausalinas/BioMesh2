@@ -1,13 +1,13 @@
-#include "biomesh2/EmptyVoxelMeshGenerator.hpp"
-#include "biomesh2/GiDExporter.hpp"
-#include "biomesh2/VoxelGrid.hpp"
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/AtomBuilder.hpp"
+#include "biomesh/EmptyVoxelMeshGenerator.hpp"
+#include "biomesh/GiDExporter.hpp"
+#include "biomesh/VoxelGrid.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/AtomBuilder.hpp"
 #include <iostream>
 #include <iomanip>
 #include <string>
 
-using namespace biomesh2;
+using namespace biomesh;
 
 void printUsage(const char* programName) {
     std::cout << "\nUsage: " << programName << " <pdb_file> <voxel_size> <output_file> [padding]\n\n";
@@ -23,7 +23,7 @@ void printUsage(const char* programName) {
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << "BioMesh2 - Empty Voxel Mesh Generator with GiD Export\n";
+    std::cout << "BioMesh - Empty Voxel Mesh Generator with GiD Export\n";
     std::cout << "======================================================\n\n";
     
     // Check arguments

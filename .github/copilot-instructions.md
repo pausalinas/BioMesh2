@@ -82,7 +82,7 @@ make test
 - **`biomesh2_example`**: Demonstrates PDB parsing, atom enrichment, and bounding box calculation
 - **`octree_demo`**: Shows octree subdivision and spatial queries
 
-### Test Suite (`biomesh2_tests`)
+### Test Suite (`biomesh_tests`)
 - **Location**: `tests/test_biomesh2.cpp`
 - **Coverage**: All components with 35 comprehensive tests
 - **Runtime**: <1 second for complete test suite
@@ -104,7 +104,7 @@ make -j4  # Takes 2-7 seconds depending on changes
 ```bash
 cd build
 make test        # Run via CTest
-./biomesh2_tests  # Run directly (shows detailed output)
+./biomesh_tests  # Run directly (shows detailed output)
 ```
 
 ### Adding New Chemical Elements

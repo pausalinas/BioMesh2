@@ -1,10 +1,10 @@
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/MoleculeFilter.hpp"
-#include "biomesh2/ResidueClassifier.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/MoleculeFilter.hpp"
+#include "biomesh/ResidueClassifier.hpp"
 #include <iostream>
 #include <iomanip>
 
-using namespace biomesh2;
+using namespace biomesh;
 
 int main(int argc, char* argv[]) {
     std::cout << "=== MoleculeFilter Demonstration ===" << std::endl << std::endl;

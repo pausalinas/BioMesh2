@@ -1,13 +1,13 @@
 # MoleculeFilter Implementation Summary
 
 ## Overview
-Successfully implemented MoleculeFilter as a preprocessing step for BioMesh2, allowing users to filter PDB files by biomolecule type (proteins, nucleic acids, water, ions, lipids, ligands) before voxelization and mesh generation.
+Successfully implemented MoleculeFilter as a preprocessing step for BioMesh, allowing users to filter PDB files by biomolecule type (proteins, nucleic acids, water, ions, lipids, ligands) before voxelization and mesh generation.
 
 ## Implementation Details
 
 ### 1. New Classes Created
 
-#### ResidueClassifier (`include/biomesh2/ResidueClassifier.hpp`, `src/ResidueClassifier.cpp`)
+#### ResidueClassifier (`include/biomesh/ResidueClassifier.hpp`, `src/ResidueClassifier.cpp`)
 - Classifies residues based on standard PDB residue names
 - Supports:
   - **Proteins**: 20 standard amino acids + 3 non-standard (MSE, SEC, PYL)
@@ -17,7 +17,7 @@ Successfully implemented MoleculeFilter as a preprocessing step for BioMesh2, al
   - **Ions**: NA, CL, K, CA, MG, ZN, FE, CU, MN
 - All classifications are case-insensitive
 
-#### MoleculeFilter (`include/biomesh2/MoleculeFilter.hpp`, `src/MoleculeFilter.cpp`)
+#### MoleculeFilter (`include/biomesh/MoleculeFilter.hpp`, `src/MoleculeFilter.cpp`)
 - Provides flexible filtering of atoms based on molecule type
 - Features:
   - **Preset filters**: `all()`, `proteinOnly()`, `nucleicAcidOnly()`, `noWater()`
@@ -27,7 +27,7 @@ Successfully implemented MoleculeFilter as a preprocessing step for BioMesh2, al
 
 ### 2. Enhanced Existing Classes
 
-#### Atom Class (`include/biomesh2/Atom.hpp`, `src/Atom.cpp`)
+#### Atom Class (`include/biomesh/Atom.hpp`, `src/Atom.cpp`)
 - Added fields:
   - `residueName`: Three-letter residue code (e.g., "ALA", "HOH")
   - `atomName`: Atom name from PDB (e.g., "CA", "N")
@@ -48,7 +48,7 @@ Successfully implemented MoleculeFilter as a preprocessing step for BioMesh2, al
 - Updated to preserve residue information when enriching atoms
 - Ensures filter information is maintained through the enrichment pipeline
 
-#### BioMesh2.hpp (`include/biomesh2/BioMesh2.hpp`)
+#### BioMesh.hpp (`include/biomesh/BioMesh.hpp`)
 - Updated to include new headers for ResidueClassifier and MoleculeFilter
 
 ### 3. Test Coverage
@@ -79,7 +79,7 @@ Test categories:
 
 2. **filter_workflow_example.cpp**: Complete pipeline demonstration:
    - Parse → Filter → Enrich → Calculate Bounding Box
-   - Shows practical integration with existing BioMesh2 workflow
+   - Shows practical integration with existing BioMesh workflow
 
 #### Test Data
 - **data/mixed_molecules.pdb**: New test file containing:
@@ -143,7 +143,7 @@ BoundingBox bbox(enriched, 2.0);
 
 ## Architecture
 
-The MoleculeFilter fits into the BioMesh2 pipeline as an optional preprocessing step:
+The MoleculeFilter fits into the BioMesh pipeline as an optional preprocessing step:
 
 ```
 PDB File → PDBParser → [MoleculeFilter] → AtomBuilder → VoxelGrid → HexMesh
@@ -163,8 +163,8 @@ All changes have been validated:
 ## Files Modified/Created
 
 ### New Files (9)
-- `include/biomesh2/ResidueClassifier.hpp`
-- `include/biomesh2/MoleculeFilter.hpp`
+- `include/biomesh/ResidueClassifier.hpp`
+- `include/biomesh/MoleculeFilter.hpp`
 - `src/ResidueClassifier.cpp`
 - `src/MoleculeFilter.cpp`
 - `tests/test_molecule_filter.cpp`
@@ -174,8 +174,8 @@ All changes have been validated:
 - `docs/MoleculeFilter.md`
 
 ### Modified Files (5)
-- `include/biomesh2/Atom.hpp` (added residue fields)
-- `include/biomesh2/BioMesh2.hpp` (included new headers)
+- `include/biomesh/Atom.hpp` (added residue fields)
+- `include/biomesh/BioMesh.hpp` (included new headers)
 - `src/PDBParser.cpp` (extract residue info, parse HETATM)
 - `src/AtomBuilder.cpp` (preserve residue info)
 - `CMakeLists.txt` (build new files)
@@ -208,4 +208,4 @@ While the current implementation is complete and meets all requirements, potenti
 
 ## Conclusion
 
-The MoleculeFilter implementation successfully adds flexible molecule type filtering to BioMesh2 as an optional preprocessing step. It is well-tested, documented, and integrates seamlessly with the existing workflow while maintaining backward compatibility.
+The MoleculeFilter implementation successfully adds flexible molecule type filtering to BioMesh as an optional preprocessing step. It is well-tested, documented, and integrates seamlessly with the existing workflow while maintaining backward compatibility.

@@ -1,9 +1,9 @@
-#include "biomesh2/BoundingBox.hpp"
+#include "biomesh/BoundingBox.hpp"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
 
-namespace biomesh2 {
+namespace biomesh {
 
 BoundingBox::BoundingBox(const std::vector<std::unique_ptr<Atom>>& atoms, double padding) {
     if (atoms.empty()) {
@@ -99,4 +99,4 @@ void BoundingBox::expandBy(double additionalPadding) {
     max_.z += additionalPadding;
 }
 
-} // namespace biomesh2
+} // namespace biomesh

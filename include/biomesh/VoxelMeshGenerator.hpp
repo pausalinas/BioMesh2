@@ -1,12 +1,12 @@
 #pragma once
 
-#include "biomesh2/VoxelGrid.hpp"
-#include "biomesh2/HexMesh.hpp"
+#include "biomesh/VoxelGrid.hpp"
+#include "biomesh/HexMesh.hpp"
 #include <vector>
 #include <array>
 #include <unordered_map>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Voxel grid to hexahedral mesh generator
@@ -45,4 +45,4 @@ private:
         std::vector<Point3D>& uniqueNodes);
 };
 
-} // namespace biomesh2
+} // namespace biomesh

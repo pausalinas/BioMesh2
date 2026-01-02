@@ -1,11 +1,11 @@
 #pragma once
 
-#include "biomesh2/Atom.hpp"
-#include "biomesh2/AtomicSpec.hpp"
+#include "biomesh/Atom.hpp"
+#include "biomesh/AtomicSpec.hpp"
 #include <vector>
 #include <memory>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Builder class for enriching atoms with physical properties
@@ -57,4 +57,4 @@ private:
     AtomicSpecDatabase& database_ = AtomicSpecDatabase::getInstance();
 };
 
-} // namespace biomesh2
+} // namespace biomesh

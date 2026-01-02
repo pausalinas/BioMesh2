@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Enhanced Atom structure with physical properties
@@ -69,4 +69,4 @@ private:
     char chainID_ = ' ';
 };
 
-} // namespace biomesh2
+} // namespace biomesh
