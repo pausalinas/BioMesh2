@@ -1,6 +1,6 @@
-#include "biomesh2/MoleculeFilter.hpp"
+#include "biomesh/MoleculeFilter.hpp"
 
-namespace biomesh2 {
+namespace biomesh {
 
 MoleculeFilter::MoleculeFilter() 
     : type_(FilterType::All),
@@ -134,4 +134,4 @@ bool MoleculeFilter::shouldKeep(const Atom& atom) const {
     return keepOthers_;
 }
 
-} // namespace biomesh2
+} // namespace biomesh

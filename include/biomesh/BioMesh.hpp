@@ -1,8 +1,8 @@
 #pragma once
 
 /**
- * @file BioMesh2.hpp
- * @brief Main header file for the BioMesh2 C++ module
+ * @file BioMesh.hpp
+ * @brief Main header file for the BioMesh C++ module
  * 
  * This module provides functionality for:
  * - Parsing PDB structure files
@@ -10,19 +10,19 @@
  * - Filtering molecules by type (proteins, nucleic acids, water, ions)
  * - Computing molecular bounding boxes
  * 
- * @author BioMesh2 Team
+ * @author BioMesh Team
  * @version 1.0.0
  */
 
-#include "biomesh2/Atom.hpp"
-#include "biomesh2/AtomicSpec.hpp"
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/AtomBuilder.hpp"
-#include "biomesh2/BoundingBox.hpp"
-#include "biomesh2/ResidueClassifier.hpp"
-#include "biomesh2/MoleculeFilter.hpp"
+#include "biomesh/Atom.hpp"
+#include "biomesh/AtomicSpec.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/AtomBuilder.hpp"
+#include "biomesh/BoundingBox.hpp"
+#include "biomesh/ResidueClassifier.hpp"
+#include "biomesh/MoleculeFilter.hpp"
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Main workflow function for processing PDB files
@@ -40,4 +40,4 @@ namespace biomesh2 {
 std::pair<std::vector<std::unique_ptr<Atom>>, BoundingBox> 
 processPDBFile(const std::string& pdbFilename, double padding = 0.0);
 
-} // namespace biomesh2
+} // namespace biomesh

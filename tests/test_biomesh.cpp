@@ -1,16 +1,16 @@
 #include <gtest/gtest.h>
-#include "biomesh2/Atom.hpp"
-#include "biomesh2/AtomicSpec.hpp"
-#include "biomesh2/AtomBuilder.hpp"
-#include "biomesh2/BoundingBox.hpp"
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/VoxelGrid.hpp"
-#include "biomesh2/VoxelMeshGenerator.hpp"
+#include "biomesh/Atom.hpp"
+#include "biomesh/AtomicSpec.hpp"
+#include "biomesh/AtomBuilder.hpp"
+#include "biomesh/BoundingBox.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/VoxelGrid.hpp"
+#include "biomesh/VoxelMeshGenerator.hpp"
 #include <memory>
 #include <vector>
 #include <set>
 
-using namespace biomesh2;
+using namespace biomesh;
 
 // Test fixtures
 class AtomTest : public ::testing::Test {

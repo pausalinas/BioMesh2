@@ -1,12 +1,12 @@
-#include "biomesh2/VoxelGrid.hpp"
-#include "biomesh2/VoxelMeshGenerator.hpp"
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/AtomBuilder.hpp"
+#include "biomesh/VoxelGrid.hpp"
+#include "biomesh/VoxelMeshGenerator.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/AtomBuilder.hpp"
 #include <iostream>
 #include <iomanip>
 #include <string>
 
-using namespace biomesh2;
+using namespace biomesh;
 
 void demonstrateVoxelization() {
     std::cout << "=== Voxelization Demo ===\n\n";
@@ -126,7 +126,7 @@ void demonstrateWithPDB() {
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << "BioMesh2 - Voxelization Demonstration\n";
+    std::cout << "BioMesh - Voxelization Demonstration\n";
     std::cout << "======================================\n\n";
     
     if (argc > 2) {

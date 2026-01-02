@@ -1,7 +1,7 @@
-#include "biomesh2/ResidueClassifier.hpp"
+#include "biomesh/ResidueClassifier.hpp"
 #include <algorithm>
 
-namespace biomesh2 {
+namespace biomesh {
 
 // Standard amino acids (20 common + non-standard MSE, SEC, PYL)
 const std::set<std::string> ResidueClassifier::aminoAcids_ = {
@@ -100,4 +100,4 @@ bool ResidueClassifier::isIon(const std::string& residueName) {
     return ionResidues_.find(upperName) != ionResidues_.end();
 }
 
-} // namespace biomesh2
+} // namespace biomesh

@@ -1,9 +1,9 @@
-#include "biomesh2/BioMesh2.hpp"
+#include "biomesh/BioMesh.hpp"
 #include <iostream>
 #include <iomanip>
 #include <string>
 
-using namespace biomesh2;
+using namespace biomesh;
 
 void printAtomInfo(const std::vector<std::unique_ptr<Atom>>& atoms) {
     std::cout << "\n=== Atom Information ===" << std::endl;
@@ -91,7 +91,7 @@ void demonstrateStepByStep() {
 }
 
 int main(int argc, char* argv[]) {
-    std::cout << "BioMesh2 C++ Module - PDB Parser and Bounding Box Calculator" << std::endl;
+    std::cout << "BioMesh C++ Module - PDB Parser and Bounding Box Calculator" << std::endl;
     std::cout << "===========================================================" << std::endl;
 
     // Run step-by-step demonstration with built-in test data

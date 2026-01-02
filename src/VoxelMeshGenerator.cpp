@@ -1,11 +1,11 @@
-#include "biomesh2/VoxelMeshGenerator.hpp"
+#include "biomesh/VoxelMeshGenerator.hpp"
 #include <cmath>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
-namespace biomesh2 {
+namespace biomesh {
 
 HexMesh VoxelMeshGenerator::generateHexMesh(const VoxelGrid& voxelGrid) {
     HexMesh mesh;
@@ -96,4 +96,4 @@ std::vector<std::array<int, 8>> VoxelMeshGenerator::assignUniqueNodeIndices(
     return elements;
 }
 
-} // namespace biomesh2
+} // namespace biomesh

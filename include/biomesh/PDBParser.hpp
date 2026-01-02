@@ -1,11 +1,11 @@
 #pragma once
 
-#include "biomesh2/Atom.hpp"
+#include "biomesh/Atom.hpp"
 #include <vector>
 #include <string>
 #include <memory>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief PDB file parser for extracting atom information
@@ -72,4 +72,4 @@ private:
     static double parseCoordinate(const std::string& line, size_t start, size_t length);
 };
 
-} // namespace biomesh2
+} // namespace biomesh

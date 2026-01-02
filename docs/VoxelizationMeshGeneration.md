@@ -17,10 +17,10 @@ This module provides functionality to generate hexahedral finite element meshes 
 ### Basic Voxelization
 
 ```cpp
-#include "biomesh2/VoxelGrid.hpp"
-#include "biomesh2/VoxelMeshGenerator.hpp"
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/AtomBuilder.hpp"
+#include "biomesh/VoxelGrid.hpp"
+#include "biomesh/VoxelMeshGenerator.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/AtomBuilder.hpp"
 
 // Parse and enrich atoms
 auto basicAtoms = PDBParser::parsePDBFile("protein.pdb");

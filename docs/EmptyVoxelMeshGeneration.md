@@ -63,11 +63,11 @@ End Elements
 ### Basic Usage
 
 ```cpp
-#include "biomesh2/EmptyVoxelMeshGenerator.hpp"
-#include "biomesh2/GiDExporter.hpp"
-#include "biomesh2/VoxelGrid.hpp"
-#include "biomesh2/PDBParser.hpp"
-#include "biomesh2/AtomBuilder.hpp"
+#include "biomesh/EmptyVoxelMeshGenerator.hpp"
+#include "biomesh/GiDExporter.hpp"
+#include "biomesh/VoxelGrid.hpp"
+#include "biomesh/PDBParser.hpp"
+#include "biomesh/AtomBuilder.hpp"
 
 // Parse and enrich atoms
 auto basicAtoms = PDBParser::parsePDBFile("protein.pdb");
@@ -110,7 +110,7 @@ A dedicated command-line tool is provided for easy mesh generation:
 ### Example Output
 
 ```
-BioMesh2 - Empty Voxel Mesh Generator with GiD Export
+BioMesh - Empty Voxel Mesh Generator with GiD Export
 ======================================================
 
 Loading PDB file: protein.pdb
@@ -171,7 +171,7 @@ This ordering is compatible with most FEM software including GiD, ANSYS, and Aba
 
 ## Compilation
 
-The module is automatically built with BioMesh2:
+The module is automatically built with BioMesh:
 
 ```bash
 mkdir build && cd build
@@ -245,7 +245,7 @@ The command-line tool validates:
 
 ## Integration with Existing Code
 
-The module seamlessly integrates with existing BioMesh2 functionality:
+The module seamlessly integrates with existing BioMesh functionality:
 
 ```cpp
 // Use the same VoxelGrid for both occupied and empty meshes
@@ -293,7 +293,7 @@ GiDExporter::exportToGiD(fluid, "fluid_domain.msh");
 
 - GiD Software: https://www.gidsimulation.com/
 - VoxelGrid documentation: See `docs/VoxelizationMeshGeneration.md`
-- HexMesh data structure: See `include/biomesh2/HexMesh.hpp`
+- HexMesh data structure: See `include/biomesh/HexMesh.hpp`
 
 ## See Also
 

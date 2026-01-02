@@ -3,7 +3,7 @@
 #include <string>
 #include <set>
 
-namespace biomesh2 {
+namespace biomesh {
 
 /**
  * @brief Classifier for identifying molecule types based on residue names
@@ -72,4 +72,4 @@ private:
     static const std::set<std::string> ionResidues_;
 };
 
-} // namespace biomesh2
+} // namespace biomesh
