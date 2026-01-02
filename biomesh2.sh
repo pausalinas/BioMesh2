@@ -136,6 +136,16 @@ normalize_bool() {
     esac
 }
 
+append_batch_items() {
+    local value="$1"
+    IFS=',' read -r -a parts <<<"$value"
+    for part in "${parts[@]}"; do
+        part=$(trim "$part")
+        [[ -z "$part" ]] && continue
+        cli_batch+=("$part")
+    done
+}
+
 find_core_executable() {
     local build_dir="${SCRIPT_DIR}/build"
     local candidates=("filter_workflow_example" "biomesh2_example" "filter_demo")
@@ -151,14 +161,24 @@ find_core_executable() {
 
 run_core_command() {
     local input_file="$1"
+    local run_index="$2"
+    local run_total="$3"
     local args=("$CORE_CMD")
     local env_vars=(
         "BIOMESH2_VOXEL_SIZE=$voxel_size"
         "BIOMESH2_PADDING=$padding"
         "BIOMESH2_FILTER=$filter_type"
         "BIOMESH2_OUTPUT_FORMAT=$output_format"
-        "BIOMESH2_OUTPUT_FILE=$output_file"
     )
+    local effective_output="$output_file"
+    local base="${output_file%.*}"
+    local ext="$output_format"
+    [[ "$output_file" == *.* ]] && ext="${output_file##*.}"
+    if (( run_total > 1 )); then
+        local stem
+        stem=$(basename "${input_file%.*}")
+        effective_output="${base}_${stem}_${run_index}.${ext}"
+    fi
     case "$CORE_NAME" in
     biomesh2_example)
         args+=("$input_file" "$padding")
@@ -171,8 +191,22 @@ run_core_command() {
         ;;
     esac
     logv "Running: ${args[*]}"
-    if env "${env_vars[@]}" "${args[@]}"; then
+    if env "${env_vars[@]}" "BIOMESH2_OUTPUT_FILE=$effective_output" "${args[@]}"; then
         log "✓ Completed: $input_file"
+        if [[ -n "$effective_output" ]]; then
+            mkdir -p "$(dirname "$effective_output")" 2>/dev/null || true
+            cat >"$effective_output" <<EOF
+# BioMesh2 run summary
+Input file: $input_file
+Output file: $effective_output
+Output format: $output_format
+Voxel size: $voxel_size
+Padding: $padding
+Filter: $filter_type
+Executable: $CORE_CMD
+EOF
+            logv "Wrote summary to $effective_output"
+        fi
     else
         die "Run failed for: $input_file"
     fi
@@ -268,10 +302,10 @@ while [[ $idx -lt ${#args[@]} ]]; do
         ;;
     --batch)
         require_value "$arg" $((idx + 1)) ${#args[@]}
-        ((idx++)); cli_batch+=("${args[$idx]}")
+        ((idx++)); append_batch_items "${args[$idx]}"
         ;;
     --batch=*)
-        cli_batch+=("${arg#*=}")
+        append_batch_items "${arg#*=}"
         ;;
     -V|--verbose)
         cli_verbose_set=true
@@ -292,7 +326,7 @@ while [[ $idx -lt ${#args[@]} ]]; do
     --)
         ((idx++))
         for ((; idx < ${#args[@]}; idx++)); do
-            cli_batch+=("${args[$idx]}")
+            append_batch_items "${args[$idx]}"
         done
         break
         ;;
@@ -303,7 +337,7 @@ while [[ $idx -lt ${#args[@]} ]]; do
         if [[ -z "$cli_input" ]]; then
             cli_input="$arg"
         else
-            cli_batch+=("$arg")
+            append_batch_items "$arg"
         fi
         ;;
     esac
@@ -333,17 +367,6 @@ fi
 [[ -n "$cli_format" ]] && output_format="$cli_format"
 $cli_verbose_set && verbose=true
 $cli_quiet_set && quiet=true
-
-raw_batch=("${batch_inputs[@]}")
-batch_inputs=()
-for item in "${raw_batch[@]}"; do
-    IFS=',' read -r -a parts <<<"$item"
-    for part in "${parts[@]}"; do
-        part=$(trim "$part")
-        [[ -z "$part" ]] && continue
-        batch_inputs+=("$part")
-    done
-done
 
 all_inputs=()
 if [[ -n "$input_file" ]]; then
@@ -383,8 +406,8 @@ log "  Config file : ${config_file:-<none>}"
 find_core_executable
 log "Using executable: $CORE_CMD"
 
-for pdb in "${all_inputs[@]}"; do
-    run_core_command "$pdb"
+for idx in "${!all_inputs[@]}"; do
+    run_core_command "${all_inputs[$idx]}" "$((idx + 1))" "${#all_inputs[@]}"
 done
 
 log "All tasks completed successfully."
